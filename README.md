@@ -80,7 +80,7 @@ doc_paths = ["docs/setup.md", "CHANGELOG.md"]
 
 You can also use CLI flags `--only` and `--exclude` to filter detectors at runtime.
 
-### Checks (v0.1.37):
+### Checks (v0.1.44):
 
 **Language runtimes:**
 - **Rust**: `rust-toolchain.toml` `channel` **and** `Cargo.toml` `rust-version` vs `README.md` / `docs/README*.md` / `CONTRIBUTING*.md` — minor-aware (patch differences ignored)
@@ -175,7 +175,7 @@ driftcheck ships a pre-commit hook. Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/yunaremaia/driftcheck
-    rev: v0.1.43
+    rev: v0.1.44
     hooks:
       - id: driftcheck
         args: ["--no-informational"]
