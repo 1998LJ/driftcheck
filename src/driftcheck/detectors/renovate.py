@@ -68,9 +68,10 @@ def find_renovate_drift(root: Path) -> list[dict]:
                     match = rule.get("match", {})
                     if isinstance(match, dict):
                         # Check if this rule blocks all updates
-                        if (match.get("updateTypes") == ["none"]
-                                or match.get("matchManagers") == ".*"
-                                and match.get("enabled") is False):
+                        update_types_none = match.get("updateTypes") == ["none"]
+                        match_managers_all = match.get("matchManagers") == ".*"
+                        enabled_false = match.get("enabled") is False
+                        if update_types_none or (match_managers_all and not enabled_false):
                             drifts.append({
                                 "file": fname,
                                 "message": "managerPolicy contains a rule blocking all updates — verify this is intentional",

@@ -53,6 +53,8 @@ def test_renovate_enabled_false(temp_empty_repo):
 def test_renovate_blocking_manager_policy(temp_empty_repo):
     """managerPolicy blocking all updates → informational."""
     (temp_empty_repo / "renovate.json").write_text(json.dumps({
+        "extends": ["config:base"],
+        "packageRules": [{"matchManagers": ["npm"], "enabled": True}],
         "managerPolicy": [
             {"match": {"matchManagers": ".*", "updateTypes": ["none"]}},
         ],
