@@ -102,6 +102,28 @@ driftcheck --report          # output markdown to stdout
 driftcheck --report >> $GITHUB_STEP_SUMMARY  # post to GitHub Actions
 ```
 
+The report includes a statistical summary at the top:
+
+```
+## driftcheck report
+
+### 📊 Summary
+
+- **Total drifts:** 3
+  - ❌ Blocking: 2
+  - ℹ️  Informational: 1
+- **Detectors fired:** 2
+  - `node`: 2
+  - `lockfile`: 1
+- **Top files:**
+  - `README.md`: 2 drift(s)
+
+### ❌ Blocking drifts
+
+**Node.js package.json engines vs README** (node_drifts):
+- `README.md`: Node 18 → should be 20
+```
+
 ### Initialize Config
 
 Generate a starter `.driftcheck.toml`:
@@ -142,6 +164,39 @@ driftcheck --git-mode --git-base origin/main
 ```
 
 This maps changed file paths to detector patterns (e.g., a `package.json` change runs only the Node.js and npm-related detectors) and skips the rest. Useful in CI where the full scan is overkill for a targeted PR.
+
+### CI/CD Integration
+
+driftcheck is designed to run as a quality gate in CI pipelines. It exits with code 1 when blocking drifts are found, making it easy to fail a build or PR check.
+
+**Exit codes:**
+- `0` — no blocking drifts (clean)
+- `1` — blocking drifts detected
+
+**GitHub Actions (full scan):**
+
+```yaml
+- name: Run driftcheck
+  run: driftcheck --report >> $GITHUB_STEP_SUMMARY
+```
+
+**GitHub Actions (PR comparison against main):**
+
+```yaml
+- uses: actions/checkout@v5
+  with:
+    fetch-depth: 0  # full history for git-base comparison
+
+- name: Driftcheck PR
+  run: |
+    driftcheck --git-mode --git-base origin/main --report >> $GITHUB_STEP_SUMMARY
+```
+
+**Comparing against a specific tag:**
+
+```bash
+driftcheck --git-mode --git-base v1.0.0
+```
 
 ### Checks (v0.1.45):
 

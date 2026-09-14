@@ -250,13 +250,53 @@ def _init_config(root: Path) -> None:
 
 
 def _print_report(result: dict) -> None:
-    """Output a markdown report of all drifts."""
+    """Output a markdown report of all drifts with statistical summary."""
     blocking = {k: result.get(k, []) for k in DRIFT_KEYS if k not in INFORMATIONAL_DRIFTS}
     informational = {k: result.get(k, []) for k in DRIFT_KEYS if k in INFORMATIONAL_DRIFTS}
     has_blocking = any(blocking.values())
     has_informational = any(informational.values())
 
     print("## driftcheck report\n")
+
+    # Statistical summary
+    total_blocking = sum(len(v) for v in blocking.values())
+    total_informational = sum(len(v) for v in informational.values())
+    total_drifts = total_blocking + total_informational
+
+    if total_drifts > 0:
+        print("### 📊 Summary\n")
+        print(f"- **Total drifts:** {total_drifts}")
+        print(f"  - ❌ Blocking: {total_blocking}")
+        print(f"  - ℹ️  Informational: {total_informational}")
+
+        # Detector breakdown
+        detectors_fired = []
+        for key, drifts in {**blocking, **informational}.items():
+            if drifts:
+                meta = DETECTOR_INFO.get(key)
+                name = meta[0] if meta else key
+                detectors_fired.append((name, len(drifts)))
+        if detectors_fired:
+            detectors_fired.sort(key=lambda x: -x[1])
+            print(f"- **Detectors fired:** {len(detectors_fired)}")
+            for name, count in detectors_fired:
+                print(f"  - `{name}`: {count}")
+
+        # Top files with most drifts
+        file_counts: dict[str, int] = {}
+        for key, drifts in {**blocking, **informational}.items():
+            for d in drifts:
+                if isinstance(d, dict):
+                    fname = d.get("file", "?")
+                    file_counts[fname] = file_counts.get(fname, 0) + 1
+        if file_counts:
+            top_files = sorted(file_counts.items(), key=lambda x: -x[1])[:5]
+            print(f"- **Top files:**")
+            for fname, count in top_files:
+                print(f"  - `{fname}`: {count} drift(s)")
+
+        print()
+
     if not has_blocking and not has_informational:
         print("✅ No drift detected — docs match toolchain.")
         return
