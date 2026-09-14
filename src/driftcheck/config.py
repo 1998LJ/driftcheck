@@ -31,6 +31,7 @@ DRIFT_KEYS = [
     "taskfile_drifts", "mise_drifts",
     "pre_commit_drifts",
     "typosquat_drifts",
+    "poetry_drifts",
 ]
 
 # Default configuration

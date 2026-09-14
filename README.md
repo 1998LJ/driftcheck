@@ -309,9 +309,9 @@ pre-commit install
 
 ### Stats
 
-- **57 detector modules** covering 50+ toolchains and file types
-- **61 independent detectors** (including split environment detectors)
-- **1021 tests** with >95% code coverage
+- **58 detector modules** covering 50+ toolchains and file types
+- **62 independent detectors** (including split environment detectors)
+- **1051 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 - **Plugin system** for custom detectors
 - **Pre-commit hook** support
@@ -374,6 +374,7 @@ Inspired by fixing https://github.com/tinyhumansai/openhuman/issues/5781 (6 READ
 | PHP | php | `php_drifts` | composer.json require.php |
 | Python | conda | `conda_drifts` | Conda environment.yml pinned versions |
 | Python | pipfile | `pipfile_drifts` | Pipfile vs Pipfile.lock version mismatches |
+| Python | poetry | `poetry_drifts` | Poetry pyproject.toml [tool.poetry] dependencies |
 | Python | python | `python_drifts` | Python pyproject.toml requires-python |
 | Python | python-version | `python_version_drifts` | .python-version vs README |
 | Python | requirements | `requirements_drifts` | requirements.txt package versions |

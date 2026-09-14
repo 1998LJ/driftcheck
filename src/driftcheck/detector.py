@@ -79,6 +79,8 @@ from .detectors import (
     find_helm_values_drift,
     find_env_drift_combined,
     find_requirements_drift,
+    parse_poetry_pyproject,
+    find_poetry_drift,
     parse_kotlin_version,
     find_kotlin_drift,
     find_pipfile_drift,
@@ -367,6 +369,11 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     req_text = req_path.read_text(encoding="utf-8", errors="replace") if req_path.exists() else ""
     requirements_drifts = find_requirements_drift(req_text, pyproject_text, docs)
 
+    # Poetry (pyproject.toml with [tool.poetry] section)
+    poetry_pyproject_path = root / "pyproject.toml"
+    poetry_pyproject_text = poetry_pyproject_path.read_text(encoding="utf-8", errors="replace") if poetry_pyproject_path.exists() else ""
+    poetry_drifts = find_poetry_drift(poetry_pyproject_text, docs)
+
     # Kotlin (build.gradle.kts)
     gradle_kts_files = {}
     for pattern in ["build.gradle.kts", "gradle/build.gradle.kts"]:
@@ -508,6 +515,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
         "elixir_drifts": elixir_drifts,
         "cmake_drifts": cmake_drifts,
         "requirements_drifts": requirements_drifts,
+        "poetry_drifts": poetry_drifts,
         "kotlin_drifts": kotlin_drifts,
         "pipfile_drifts": pipfile_drifts,
         "conda_drifts": conda_drifts,

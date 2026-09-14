@@ -171,4 +171,6 @@ DETECTOR_FILE_PATTERNS: dict[str, list[str]] = {
     "taskfile_drifts": ["Taskfile.yml", "Taskfile.yaml", "Makefile"],
     "devcontainer_drifts": [".devcontainer/devcontainer.json", ".devcontainer/*.devcontainer.json", "devcontainer.json", "README.md"],
     "mise_drifts": ["mise.toml", "README.md"],
+    "poetry_drifts": ["pyproject.toml", "README.md", "CONTRIBUTING.md"],
 }
+

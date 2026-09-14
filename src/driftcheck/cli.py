@@ -54,6 +54,7 @@ DETECTOR_INFO = {
     "elixir_drifts": ("elixir", "Elixir mix.exs version vs README"),
     "cmake_drifts": ("cmake", "CMakeLists.txt cmake_minimum_required version vs README"),
     "requirements_drifts": ("requirements", "requirements.txt package versions vs pyproject.toml/README"),
+    "poetry_drifts": ("poetry", "Poetry pyproject.toml [tool.poetry] dependencies vs README"),
     "kotlin_drifts": ("kotlin", "Kotlin build.gradle.kts plugin version vs README"),
     "pipfile_drifts": ("pipfile", "Pipfile vs Pipfile.lock version mismatches"),
     "conda_drifts": ("conda", "Conda environment.yml pinned versions"),
@@ -503,6 +504,10 @@ def _print_blocking_drifts(all_drifts: dict, result: dict) -> None:
     # Conda drift
     for d in all_drifts.get("conda_drifts", []):
         print(f"driftcheck: {d['file']}: {d['package']}: {d.get('environment_version', 'unpinned')} version pin")
+
+    # Poetry drift
+    for d in all_drifts.get("poetry_drifts", []):
+        print(f"driftcheck: {d['file']}: {d['package']} {d['doc_version']} → should be {d['pyproject_version']} (pyproject.toml)")
 
     # Gradle Version Catalog drift
     for d in all_drifts.get("gradle_catalog_drifts", []):

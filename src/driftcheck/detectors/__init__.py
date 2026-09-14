@@ -226,6 +226,12 @@ from .conda import (
     find_conda_drift,
     CONDA_ENV_RE,
 )
+from .poetry import (
+    parse_poetry_pyproject,
+    find_poetry_drift,
+    POETRY_PYTHON_RE,
+    POETRY_PKG_RE,
+)
 from .jenkins import (
     parse_jenkins_node_agent,
     parse_jenkins_nodejs_version,
@@ -461,6 +467,11 @@ __all__ = [
     "find_pipfile_drift",
     "PIPFILE_RE",
     "PIPFILE_LOCK_RE",
+    # Poetry
+    "parse_poetry_pyproject",
+    "find_poetry_drift",
+    "POETRY_PYTHON_RE",
+    "POETRY_PKG_RE",
     # Conda
     "parse_conda_environment",
     "find_conda_drift",
