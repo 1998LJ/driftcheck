@@ -1,6 +1,6 @@
 """driftcheck CLI."""
 from __future__ import annotations
-import argparse, json
+import argparse, csv, json, io
 from pathlib import Path
 from .detector import scan_repo, apply_fixes
 from .sarif import to_sarif
@@ -82,6 +82,7 @@ def main(argv=None) -> int:
     )
     ap.add_argument("path", nargs="?", default=".", help="repo root (default: .)")
     ap.add_argument("--json", action="store_true", dest="as_json", help="JSON output")
+    ap.add_argument("--csv", action="store_true", dest="as_csv", help="CSV output (for spreadsheets/data pipelines)")
     ap.add_argument("--sarif", action="store_true", dest="as_sarif", help="SARIF 2.1.0 output (for GitHub Code Scanning)")
     ap.add_argument("--fix", action="store_true", help="auto-fix detected drifts in documentation files")
     ap.add_argument("--version", action="version", version=_version())
@@ -135,6 +136,14 @@ def main(argv=None) -> int:
         from . import __version__
         sarif_doc = to_sarif(result, version=__version__)
         print(json.dumps(sarif_doc, indent=2))
+        blocking = {k: result.get(k, []) for k in DRIFT_KEYS if k not in INFORMATIONAL_DRIFTS}
+        return 1 if any(blocking.values()) else 0
+
+    if args.no_informational:
+        result = {k: v for k, v in result.items() if k not in INFORMATIONAL_DRIFTS}
+
+    if args.as_csv:
+        _print_csv(result)
         blocking = {k: result.get(k, []) for k in DRIFT_KEYS if k not in INFORMATIONAL_DRIFTS}
         return 1 if any(blocking.values()) else 0
 
@@ -287,6 +296,68 @@ def _print_report(result: dict) -> None:
                 detail = d.get("detail", str(d))
                 print(f"- `{file}`: {detail}")
             print()
+
+
+def _print_csv(result: dict) -> None:
+    """Output drifts as CSV (columns: file,detector,doc_version,actual_version,severity,message)."""
+    rows = []
+    for key, drifts in result.items():
+        if not isinstance(drifts, list) or not drifts:
+            continue
+        severity = "informational" if key in INFORMATIONAL_DRIFTS else "blocking"
+        short_name = DETECTOR_INFO.get(key, (key,))[0]
+        for d in drifts:
+            if not isinstance(d, dict):
+                continue
+            # Extract actual version from various field names
+            actual_v = (
+                d.get("suggested")
+                or d.get("toolchain_version")
+                or d.get("package_version")
+                or d.get("gomod_version")
+                or d.get("pyproject_version")
+                or d.get("makefile_version")
+                or d.get("cargo_version")
+                or d.get("gradle_version")
+                or d.get("maven_version")
+                or d.get("terraform_version")
+                or d.get("circleci_image")
+                or d.get("gitlab_image")
+                or d.get("k8s_image")
+                or d.get("helm_image")
+                or d.get("compose_image")
+                or d.get("dotnet_version")
+                or d.get("ruby_version")
+                or d.get("php_version")
+                or d.get("swift_version")
+                or d.get("deno_json_version")
+                or d.get("dart_version")
+                or d.get("mix_version")
+                or d.get("cmake_version")
+                or d.get("pipfile_version")
+                or d.get("catalog_version")
+                or d.get("taskfile_version")
+                or d.get("tool_versions_version")
+                or d.get("version_file")
+                or ""
+            )
+            rows.append({
+                "file": d.get("file", ""),
+                "detector": short_name,
+                "doc_version": d.get("doc_version", d.get("doc_image", d.get("tool", ""))),
+                "actual_version": actual_v,
+                "severity": severity,
+                "message": d.get("detail", ""),
+            })
+
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=["file", "detector", "doc_version", "actual_version", "severity", "message"],
+    )
+    writer.writeheader()
+    writer.writerows(rows)
+    print(output.getvalue(), end="")
 
 
 def _list_detectors() -> None:

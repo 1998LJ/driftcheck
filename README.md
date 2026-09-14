@@ -14,6 +14,7 @@ driftcheck           # scan current repo
 driftcheck --json    # machine-readable
 driftcheck --fix     # auto-fix drifts in documentation files
 driftcheck --sarif   # SARIF 2.1.0 output for GitHub Code Scanning
+driftcheck --csv     # CSV output for spreadsheets/data pipelines
 driftcheck --list-detectors  # show available detectors
 driftcheck --only tool_versions_drifts  # run specific detectors
 driftcheck --exclude nvmrc_drifts,lockfile_drifts  # exclude detectors
@@ -43,6 +44,18 @@ Or with SARIF upload for GitHub Code Scanning:
   with:
     sarif_file: driftcheck.sarif
 ```
+
+### CSV Export
+
+Output drift findings as CSV — useful for spreadsheets, data pipelines, and CI artifact collection:
+
+```bash
+driftcheck --csv                     # CSV output to stdout
+driftcheck --csv > drifts.csv        # save to file for CI artifact
+driftcheck --csv --no-informational  # exclude informational drifts
+```
+
+Output columns: `file`, `detector`, `doc_version`, `actual_version`, `severity`, `message`.
 
 ### Markdown Report
 
@@ -80,7 +93,7 @@ doc_paths = ["docs/setup.md", "CHANGELOG.md"]
 
 You can also use CLI flags `--only` and `--exclude` to filter detectors at runtime.
 
-### Checks (v0.1.44):
+### Checks (v0.1.45):
 
 **Language runtimes:**
 - **Rust**: `rust-toolchain.toml` `channel` **and** `Cargo.toml` `rust-version` vs `README.md` / `docs/README*.md` / `CONTRIBUTING*.md` — minor-aware (patch differences ignored)
