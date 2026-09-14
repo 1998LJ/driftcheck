@@ -1,0 +1,3 @@
+[driftcheck]
+# exclude_detectors = ["lockfile", "nvmrc"]
+# fail_on_informational = false
