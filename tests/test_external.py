@@ -7,6 +7,7 @@ import pytest
 from driftcheck.detectors.external import (
     EXTERNAL_CDN_RE,
     find_external_resource_drift,
+    SKIP_DIRS,
 )
 
 
@@ -53,13 +54,13 @@ class TestExternalResourceRegex:
 class TestFindExternalResourceDrift:
     """Test the find_external_resource_drift function."""
 
-    def _make_root(self, tmp_path: Path, html_content: str, rel_path: str = "archify/assets/template.html") -> Path:
+    def _make_root(self, tmp_path: Path, html_content: str, rel_path: str = "index.html") -> Path:
         target = tmp_path / rel_path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(html_content)
         return tmp_path
 
-    def test_detects_googlefonts_in_template(self, tmp_path):
+    def test_detects_googlefonts_in_html(self, tmp_path):
         html = """<!DOCTYPE html>
 <html>
 <head>
@@ -85,7 +86,7 @@ class TestFindExternalResourceDrift:
         drifts = find_external_resource_drift(root)
         assert len(drifts) == 0
 
-    def test_detects_in_examples(self, tmp_path):
+    def test_detects_in_nested_dir(self, tmp_path):
         html = '<script src="https://cdn.jsdelivr.net/npm/vue@3"></script>'
         root = self._make_root(tmp_path, html, rel_path="examples/demo.html")
         drifts = find_external_resource_drift(root)
@@ -124,9 +125,39 @@ class TestFindExternalResourceDrift:
         drifts = find_external_resource_drift(root)
         assert len(drifts) == 0
 
-    def test_no_candidates_dir(self, tmp_path):
+    def test_no_html_files(self, tmp_path):
         drifts = find_external_resource_drift(tmp_path)
         assert len(drifts) == 0
+
+    def test_skips_node_modules(self, tmp_path):
+        html = '<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap">'
+        root = self._make_root(tmp_path, html, rel_path="node_modules/some-pkg/index.html")
+        drifts = find_external_resource_drift(root)
+        assert len(drifts) == 0
+
+    def test_skips_build_dir(self, tmp_path):
+        html = '<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap">'
+        root = self._make_root(tmp_path, html, rel_path="build/index.html")
+        drifts = find_external_resource_drift(root)
+        assert len(drifts) == 0
+
+    def test_skips_vendor_dir(self, tmp_path):
+        html = '<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap">'
+        root = self._make_root(tmp_path, html, rel_path="vendor/package/index.html")
+        drifts = find_external_resource_drift(root)
+        assert len(drifts) == 0
+
+    def test_multiple_html_files(self, tmp_path):
+        """Test detection across multiple HTML files."""
+        html1 = '<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap">'
+        html2 = '<script src="https://cdn.jsdelivr.net/npm/vue@3"></script>'
+        self._make_root(tmp_path, html1, rel_path="index.html")
+        self._make_root(tmp_path, html2, rel_path="about.html")
+        drifts = find_external_resource_drift(tmp_path)
+        assert len(drifts) == 2
+        hosts = {d["host"] for d in drifts}
+        assert "fonts.googleapis.com" in hosts
+        assert "cdn.jsdelivr.net" in hosts
 
     def test_alt_template_path(self, tmp_path):
         html = '<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap">'
