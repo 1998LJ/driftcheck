@@ -189,7 +189,7 @@ driftcheck ships a pre-commit hook. Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/yunaremaia/driftcheck
-    rev: v0.1.44
+    rev: v0.1.45
     hooks:
       - id: driftcheck
         args: ["--no-informational"]
