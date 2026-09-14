@@ -129,6 +129,20 @@ doc_paths = ["docs/setup.md", "CHANGELOG.md"]
 
 You can also use CLI flags `--only` and `--exclude` to filter detectors at runtime.
 
+### Git-Mode (Incremental Scans)
+
+For large repositories, scan only the detectors relevant to your latest changes:
+
+```bash
+# Only check files changed since the last commit
+driftcheck --git-mode
+
+# Compare against a specific base (e.g., main branch)
+driftcheck --git-mode --git-base origin/main
+```
+
+This maps changed file paths to detector patterns (e.g., a `package.json` change runs only the Node.js and npm-related detectors) and skips the rest. Useful in CI where the full scan is overkill for a targeted PR.
+
 ### Checks (v0.1.45):
 
 **Language runtimes:**
