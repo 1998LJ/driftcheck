@@ -291,6 +291,10 @@ from .taskfile import (
     parse_taskfile,
     parse_makefile,
 )
+from .pre_commit import (
+    parse_pre_commit_revs,
+    find_pre_commit_drift,
+)
 from .fix import apply_fixes
 from .typosquat import find_typosquat_drift
 

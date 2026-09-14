@@ -115,6 +115,8 @@ from .detectors import (
     find_taskfile_drift,
     find_mise_drift,
     parse_mise_tools,
+    parse_pre_commit_revs,
+    find_pre_commit_drift,
 )
 
 
@@ -442,6 +444,11 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # Git tag drift (latest git tag vs README)
     git_tag_drifts = find_git_tag_drift(root, docs)
 
+    # Pre-commit config drift
+    pre_commit_path = root / ".pre-commit-config.yaml"
+    pre_commit_text = pre_commit_path.read_text(encoding="utf-8", errors="replace") if pre_commit_path.exists() else ""
+    pre_commit_drifts = find_pre_commit_drift(pre_commit_text, docs)
+
     # Devcontainer
     devcontainer_files = {}
     for pattern in [".devcontainer/devcontainer.json", ".devcontainer/*.devcontainer.json", "devcontainer.json"]:
@@ -520,6 +527,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
         "git_tag_drifts": git_tag_drifts,
         "devcontainer_drifts": devcontainer_drifts,
         "taskfile_drifts": taskfile_drifts,
+        "pre_commit_drifts": pre_commit_drifts,
     }
 
     # Run plugin detectors

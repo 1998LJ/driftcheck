@@ -140,6 +140,7 @@ You can also use CLI flags `--only` and `--exclude` to filter detectors at runti
 - **Yarn RC**: `.yml` Yarn version vs README mentions
 - **PNPM workspace**: `pnpm-workspace.yaml` packages vs `package.json` workspaces
 - **Git Tag**: latest git tag vs README version mentions — detects when README references a stale version
+- **Pre-commit**: `.pre-commit-config.yaml` `rev:` vs README mentions of pre-commit version
 
 ### Plugins
 
@@ -191,8 +192,8 @@ pre-commit install
 ### Stats
 
 - **54 detector modules** covering 50+ toolchains and file types
-- **61 independent detectors** (including split environment detectors)
-- **1001 tests** with >95% code coverage
+- **62 independent detectors** (including split environment detectors)
+- **1016 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 - **Plugin system** for custom detectors
 - **Pre-commit hook** support
