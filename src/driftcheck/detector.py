@@ -119,6 +119,7 @@ from .detectors import (
     parse_mise_tools,
     parse_pre_commit_revs,
     find_pre_commit_drift,
+    find_renovate_drift,
 )
 
 
@@ -536,6 +537,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
         "devcontainer_drifts": devcontainer_drifts,
         "taskfile_drifts": taskfile_drifts,
         "pre_commit_drifts": pre_commit_drifts,
+        "renovate_drifts": find_renovate_drift(root),
     }
 
     # Run plugin detectors

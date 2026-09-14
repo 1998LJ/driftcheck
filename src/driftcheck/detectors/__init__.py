@@ -303,6 +303,7 @@ from .pre_commit import (
 )
 from .fix import apply_fixes
 from .typosquat import find_typosquat_drift
+from .renovate import find_renovate_drift
 
 __all__ = [
     # Rust
@@ -490,4 +491,5 @@ __all__ = [
     "find_devcontainer_drift",
     "parse_mise_tools",
     "find_mise_drift",
+    "find_renovate_drift",
 ]

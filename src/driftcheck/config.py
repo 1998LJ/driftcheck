@@ -32,6 +32,7 @@ DRIFT_KEYS = [
     "pre_commit_drifts",
     "typosquat_drifts",
     "poetry_drifts",
+    "renovate_drifts",
 ]
 
 # Default configuration
