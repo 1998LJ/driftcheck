@@ -263,3 +263,69 @@ pre-commit install
 - **CI matrix**: Python 3.10-3.14, Linux/macOS/Windows
 
 Inspired by fixing https://github.com/tinyhumansai/openhuman/issues/5781 (6 READMEs drifted).
+
+### Detector Comparison Matrix
+
+| Ecosystem | Detector | Drift Key | Example Detected |
+|-----------|----------|-----------|------------------|
+| .NET | dotnet | `dotnet_drifts` | .NET csproj TargetFramework |
+| C/C++ | cmake | `cmake_drifts` | CMakeLists.txt cmake_minimum_required |
+| C/C++ | makefile | `makefile_drifts` | Makefile tool version pins (CC, CMAKE, GO) |
+| CI/CD | actions-outdated | `gh_actions_version_drifts` | GitHub Actions outdated versions |
+| CI/CD | ci-os | `ci_os_drifts` | Deprecated CI runner (e.g., ubuntu-20.04) |
+| CI/CD | circleci | `circleci_drifts` | CircleCI config.yml image |
+| CI/CD | gitlab | `gitlab_drifts` | GitLab CI image tag |
+| CI/CD | jenkins | `jenkins_drifts` | Jenkinsfile tool versions (nodejs, python, docker) |
+| Docker | compose | `dc_drifts` | Docker Compose image |
+| Docker | compose-override | `compose_override_drifts` | Docker Compose override file image drift |
+| Docker | docker | `docker_drifts` | Dockerfile FROM tag |
+| Docker | docker-bases | `docker_bases_drifts` | Floating/unpinned base images |
+| Docker | docker-multistage | `docker_multistage_drifts` | Multi-stage Dockerfile conflicting tags |
+| Editor/IDE | editorconfig | `editorconfig_drifts` | .editorconfig vs README/IDE indent |
+| Editor/IDE | vscode-ext | `vscode_ext_drifts` | VSCode extensions.json vs README recommendations |
+| Elixir | elixir | `elixir_drifts` | Elixir mix.exs version |
+| Environment | env | `env_drifts` | .env.example vs .env, compose overrides |
+| Environment | env-example | `env_example_drifts` | .env.example vs .env key drift |
+| General | count | `count_drifts` | Skills directory count vs README |
+| General | dart | `dart_drifts` | Dart pubspec.yaml SDK constraint |
+| General | deno | `deno_drifts` | Deno deno.json version field |
+| General | dependabot | `dependabot_drifts` | Dependabot coverage gaps (informational) |
+| General | external | `external_resource_drifts` | External CDN resources in HTML (informational) |
+| General | lineending | `lineending_drifts` | Missing .gitattributes line ending config |
+| General | lockfile | `lockfile_drifts` | Lockfile missing/stale/orphaned (informational) |
+| General | mise | `mise_drifts` | mise.toml tool versions |
+| General | nvmrc | `nvmrc_drifts` | .nvmrc vs package.json engines (informational) |
+| General | package-manager | `package_manager_drifts` | packageManager field vs lockfile |
+| General | swift | `swift_drifts` | Swift Package.swift version pins |
+| General | taskfile | `taskfile_drifts` | Taskfile.yml tool versions |
+| General | tool-versions | `tool_versions_drifts` | .tool-versions asdf/mise |
+| Git | git-tag | `git_tag_drifts` | Latest git tag vs README version mentions |
+| Go | go | `go_drifts` | Go go.mod directive |
+| Gradle | gradle | `java_drifts` | Gradle build.gradle sourceCompatibility |
+| Gradle | gradle-catalog | `gradle_catalog_drifts` | Gradle Version Catalog (libs.versions.toml) |
+| Helm | helm | `helm_drifts` | Helm Chart.yaml/values.yaml |
+| Helm | helm-values | `helm_values_drifts` | Helm values.yaml vs environment-specific values |
+| Java | java-version | `java_version_drifts` | .java-version vs README |
+| Kotlin | kotlin | `kotlin_drifts` | Kotlin build.gradle.kts plugin version |
+| Kubernetes | k8s | `k8s_drifts` | Kubernetes manifest image |
+| Maven | maven | `maven_drifts` | Maven pom.xml java.version |
+| Node | actions-node20 | `actions_drifts` | GitHub Actions Node 20 deprecation |
+| Node | bun | `bun_drifts` | Bun package.json engines.bun |
+| Node | node | `node_drifts` | Node.js package.json engines |
+| Node | node-version | `node_version_drifts` | .node-version vs README |
+| Node | npmrc | `npmrc_drifts` | .npmrc vs package.json settings |
+| Node | pnpm | `pnpm_workspace_drifts` | pnpm-workspace.yaml vs package.json workspaces |
+| Node | yarnrc | `yarnrc_drifts` | .yarnrc.yml Yarn version |
+| PHP | php | `php_drifts` | composer.json require.php |
+| Python | conda | `conda_drifts` | Conda environment.yml pinned versions |
+| Python | pipfile | `pipfile_drifts` | Pipfile vs Pipfile.lock version mismatches |
+| Python | python | `python_drifts` | Python pyproject.toml requires-python |
+| Python | python-version | `python_version_drifts` | .python-version vs README |
+| Python | requirements | `requirements_drifts` | requirements.txt package versions |
+| Ruby | ruby | `ruby_drifts` | Gemfile ruby directive |
+| Ruby | ruby-version | `ruby_version_drifts` | .ruby-version vs README |
+| Rust | rust-cargo | `rust_drifts` | Rust Cargo.toml rust-version |
+| Rust | rust-toolchain | `drifts` | Rust toolchain.toml channel |
+| Security | typosquat | `typosquat_drifts` | Typosquat detection in dependencies (informational) |
+| Terraform | terraform | `terraform_drifts` | Terraform versions.tf provider |
+| Terraform | terraform-version | `terraform_version_drifts` | .terraform-version vs README |
