@@ -250,6 +250,8 @@ driftcheck --git-mode --git-base v1.0.0
 - **Tool versions**: `.tool-versions` (asdf/mise) — detects drift for Node, Python, Go, Rust, Ruby, Java, PHP, .NET
 - **Mise**: `mise.toml` `[tools]` section vs README — supports string and dict specs (e.g., `node = "22"` or `python = {version = "3.12"}`)
 - **Version files**: `.ruby-version`, `.python-version`, `.node-version`, `.java-version`, `.terraform-version` vs README
+- **Devcontainer**: `.devcontainer/devcontainer.json` image/tags vs README
+- **Renovate**: `renovate.json` configuration drift vs README
 - **NVMRC**: `.nvmrc` vs `package.json` engines.node (informational)
 - **Dependabot**: ecosystems used but not covered by `.github/dependabot.yml` (informational)
 - **SARIF output**: `driftcheck --sarif` generates SARIF 2.1.0 for GitHub Code Scanning
