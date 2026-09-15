@@ -149,6 +149,11 @@ fail_on_informational = false
 doc_paths = ["docs/setup.md", "CHANGELOG.md"]
 ```
 
+By default, informational drifts (such as missing lockfiles or orphaned configurations) are reported as non-blocking warnings and exit with code `0`.
+
+- **`--fail-on-informational`**: Promotes informational drifts to blocking errors, causing `driftcheck` to exit with code `1`. Useful in strict CI pipelines where you want to enforce rules like missing lockfiles or missing `.gitattributes` (`* text=auto eol=lf`).
+- **`--no-informational`**: Suppresses informational drifts from the output entirely.
+
 You can also use CLI flags `--only` and `--exclude` to filter detectors at runtime.
 
 ### Git-Mode (Incremental Scans)

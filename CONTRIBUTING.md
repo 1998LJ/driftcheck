@@ -29,6 +29,9 @@ pytest -q --cov=driftcheck --cov-report=term-missing  # with coverage
 
 We aim for 90%+ coverage on new code.
 
+**Testing / CI Tip:**
+When testing CLI behavior locally or verifying strict rules, use `--fail-on-informational` to treat informational drifts (such as missing lockfiles) as exit code 1 failures.
+
 ## Project Structure
 
 ```
