@@ -94,6 +94,12 @@ class TestFindPythonVersionFileDrift:
         assert len(result) == 1
         assert result[0]["floor_source"] == "setup.cfg"
 
+    def test_setup_py_fallback(self):
+        result = find_python_version_file_drift("3.7", None, None, 'python_requires=">=3.8"')
+        assert len(result) == 1
+        assert result[0]["floor_source"] == "setup.py"
+        assert result[0]["floor_version"] == "3.8.0"
+
     def test_pyproject_takes_precedence_over_setup_cfg(self):
         result = find_python_version_file_drift(
             "3.7", 'requires-python = ">=3.8"', 'python_requires = ">=3.9"'
