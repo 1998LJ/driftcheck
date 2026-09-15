@@ -297,6 +297,16 @@ DRIFT_RULES = {
         "Devcontainer Version Drift",
         "README documentation references a version that doesn't match devcontainer.json image or features",
     ),
+    "bazel_drifts": (
+        "bazel-version-drift",
+        "Bazel Version Drift",
+        "README documentation references a Bazel version that doesn't match .bazelversion or MODULE.bazel pins",
+    ),
+    "nix_drifts": (
+        "nix-version-drift",
+        "Nix Version Drift",
+        "README documentation references a nixpkgs version that doesn't match flake.lock",
+    ),
     "compose_override_drifts": (
         "compose-override-drift",
         "Docker Compose Override Drift",
@@ -468,6 +478,10 @@ def _drift_message(drift_type: str, d: dict) -> str:
     elif drift_type == "devcontainer_drifts":
         feature = d.get("feature", "image")
         return f"{feature} {d.get('doc_version')} in docs should be {d.get('devcontainer_version')} (devcontainer.json)"
+    elif drift_type == "bazel_drifts":
+        return f"{d.get('tool', 'Bazel')} {d.get('doc_version')} in docs should be {d.get('config_version')} ({d.get('source', 'Bazel config')})"
+    elif drift_type == "nix_drifts":
+        return f"{d.get('tool', 'nixpkgs')} {d.get('doc_version')} in docs should be {d.get('config_version')} (flake.lock)"
     elif drift_type == "compose_override_drifts":
         return d.get("detail", "Docker Compose override drift detected")
     elif drift_type == "helm_values_drifts":
@@ -508,7 +522,7 @@ def to_sarif(result: dict, version: str | None = None) -> dict:
         "npmrc_drifts", "yarnrc_drifts", "pnpm_workspace_drifts", "package_manager_drifts",
         "vscode_ext_drifts", "editorconfig_drifts", "taskfile_drifts",
         "devcontainer_drifts", "compose_override_drifts", "helm_values_drifts",
-        "mise_drifts",
+        "mise_drifts", "bazel_drifts", "nix_drifts",
     ]
 
     for drift_type in drift_keys:

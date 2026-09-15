@@ -1,6 +1,6 @@
 # Detectors
 
-driftcheck ships **60 detector modules** covering **64 registered detectors**. Each checks for a specific kind of version drift between toolchain files and documentation.
+driftcheck ships **59 detector modules** covering **67 registered detectors**. Each checks for a specific kind of version drift between toolchain files and documentation.
 
 ## Language Runtimes
 

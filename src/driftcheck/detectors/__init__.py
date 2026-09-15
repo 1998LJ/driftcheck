@@ -500,3 +500,4 @@ __all__ = [
 ]
 
 from .bazel import find_bazel_drift
+from .nix import find_nix_drift

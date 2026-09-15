@@ -34,6 +34,7 @@ DRIFT_KEYS = [
     "poetry_drifts",
     "renovate_drifts",
     "bazel_drifts",
+    "nix_drifts",
 ]
 
 # Default configuration

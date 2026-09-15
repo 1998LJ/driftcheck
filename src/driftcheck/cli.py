@@ -55,6 +55,7 @@ DETECTOR_INFO = {
     "cmake_drifts": ("cmake", "CMakeLists.txt cmake_minimum_required version vs README"),
     "requirements_drifts": ("requirements", "requirements.txt package versions vs pyproject.toml/README"),
     "bazel_drifts": ("bazel", "Bazel pins vs README"),
+    "nix_drifts": ("nix", "Nix flake.lock nixpkgs pins vs README"),
     "poetry_drifts": ("poetry", "Poetry pyproject.toml [tool.poetry] dependencies vs README"),
     "kotlin_drifts": ("kotlin", "Kotlin build.gradle.kts plugin version vs README"),
     "pipfile_drifts": ("pipfile", "Pipfile vs Pipfile.lock version mismatches"),

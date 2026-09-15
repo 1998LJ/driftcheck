@@ -2,6 +2,18 @@
 
 All notable changes to driftcheck will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Nix flake.lock drift detection**: detects version mismatch between `flake.lock` nixpkgs pins and README mentions
+  - Parses `flake.lock` JSON structure and extracts nixpkgs/nixos version pins
+  - Matches against README patterns like `nixpkgs 24.05`, `nixos-24.05`, `nixpkgs-unstable`
+  - Handles multiple nixpkgs inputs (stable + unstable) with channel-aware comparison
+  - 9 new tests, 1010 total
+
+### Fixed
+- Synced README and docs stats: 59 detector modules, 67 registered detectors, 1001 tests
+
 ## [0.1.44] - 2026-09-12
 
 ### Added

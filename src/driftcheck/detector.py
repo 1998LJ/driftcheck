@@ -123,6 +123,7 @@ from .detectors import (
     find_pre_commit_drift,
     find_renovate_drift,
     find_bazel_drift,
+    find_nix_drift,
 )
 
 
@@ -373,6 +374,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     req_text = req_path.read_text(encoding="utf-8", errors="replace") if req_path.exists() else ""
     requirements_drifts = find_requirements_drift(req_text, pyproject_text, docs)
     bazel_drifts = find_bazel_drift(root)
+    nix_drifts = find_nix_drift(root)
 
     # Poetry (pyproject.toml with [tool.poetry] section)
     poetry_pyproject_path = root / "pyproject.toml"
@@ -533,6 +535,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
         "cmake_drifts": cmake_drifts,
         "requirements_drifts": requirements_drifts,
         "bazel_drifts": bazel_drifts,
+        "nix_drifts": nix_drifts,
         "poetry_drifts": poetry_drifts,
         "kotlin_drifts": kotlin_drifts,
         "pipfile_drifts": pipfile_drifts,
@@ -656,6 +659,8 @@ __all__ = [
     "find_dart_drift",
     # Fix
     "apply_fixes",
+    # Nix
+    "find_nix_drift",
     # Devcontainer
     "find_devcontainer_drift",
     # Environment drift
