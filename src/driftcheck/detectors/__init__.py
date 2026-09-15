@@ -494,9 +494,90 @@ __all__ = [
     "parse_devcontainer_image",
     "parse_devcontainer_features",
     "find_devcontainer_drift",
+    # Mise
     "parse_mise_tools",
     "find_mise_drift",
+    # Renovate
     "find_renovate_drift",
+    # Bazel
+    "find_bazel_drift",
+    # Nix
+    "find_nix_drift",
+    # CMake
+    "parse_cmake_version",
+    "find_cmake_drift",
+    "CMAKE_VERSION_RE",
+    # Elixir
+    "parse_mix_elixir_version",
+    "find_elixir_drift",
+    "MIX_ELIXIR_RE",
+    # Jenkins
+    "parse_jenkins_node_agent",
+    "parse_jenkins_nodejs_version",
+    "parse_jenkins_python_version",
+    "parse_jenkins_docker_images",
+    "find_jenkins_drift",
+    "JENKINS_NODE_RE",
+    "JENKINS_NODEJS_RE",
+    "JENKINS_PYTHON_RE",
+    "JENKINS_DOCKER_IMAGE_RE",
+    # NPMRC
+    "parse_npmrc",
+    "find_npmrc_drift",
+    # NVMRC
+    "parse_nvmrc_version",
+    "find_nvmrc_drift",
+    "NVMRC_RE",
+    # Package manager
+    "parse_package_manager_field",
+    "detect_lockfile_manager",
+    "find_package_manager_drift",
+    # PNPM
+    "parse_pnpm_workspace",
+    "find_pnpm_workspace_drift",
+    # Python version file
+    "parse_python_version_file",
+    "parse_requires_python",
+    "find_python_version_file_drift",
+    # Taskfile
+    "find_taskfile_drift",
+    "parse_taskfile",
+    "parse_makefile",
+    # Tool versions
+    "parse_tool_versions",
+    "find_tool_versions_drift",
+    "TOOL_VERSION_RE",
+    # Version files
+    "parse_ruby_version",
+    "parse_python_version",
+    "parse_node_version",
+    "parse_java_version",
+    "parse_terraform_version",
+    "find_version_file_drift",
+    # VSCode
+    "parse_vscode_extensions",
+    "find_vscode_extensions_drift",
+    # EditorConfig
+    "parse_editorconfig",
+    "find_editorconfig_drift",
+    # Yarn RC
+    "parse_yarnrc_version",
+    "find_yarnrc_drift",
+    # Engines
+    "find_engines_drift",
+    # Docker multistage
+    "parse_from_stages",
+    "find_dockerfile_multistage_drift",
+    "FROM_RE",
+    # Docker compose override
+    "find_compose_override_drift",
+    # Helm values
+    "find_helm_values_drift",
+    # Env drift
+    "find_env_drift",
+    # Pre-commit
+    "parse_pre_commit_revs",
+    "find_pre_commit_drift",
 ]
 
 from .bazel import find_bazel_drift

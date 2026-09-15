@@ -2,9 +2,9 @@
 
 ## Core Stats
 - **61 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
-- **63 registered detectors** (imported in `src/driftcheck/detectors/__init__.py`)
+- **65 registered detectors** (imported in `src/driftcheck/detectors/__init__.py`)
 - **65 total find_* functions** (including split environment detectors, lockfile variants, Nix)
-- **1001 tests** with >95% code coverage
+- **1103 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
