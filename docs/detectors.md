@@ -6,30 +6,37 @@ driftcheck ships **60 detector modules** covering **66 registered detectors**. E
 
 | Detector | Description |
 |----------|-------------|
-| `rust_drifts` | `rust-toolchain.toml` `channel` and `Cargo.toml` `rust-version` vs README. Minor-aware (patch differences ignored). |
-| `node_drifts` | `package.json` `engines.node` vs README. |
 | `bun_drifts` | `package.json` `engines.bun` vs README. Major.minor comparison. |
-| `python_drifts` | `pyproject.toml` `requires-python` vs README. |
-| `go_drifts` | `go.mod` `go` directive vs README. |
-| `php_drifts` | `composer.json` `require.php` vs README. Major.minor comparison. |
-| `ruby_drifts` | `Gemfile` `ruby "x.y.z"` vs README. Major.minor comparison. |
+| `dart_drifts` | `pubspec.yaml` `environment.sdk` constraint vs README. |
+| `deno_drifts` | `deno.json` version pins vs README. |
 | `dotnet_drifts` | `*.csproj` `<TargetFramework>` vs README. Handles multi-targeting. |
 | `elixir_drifts` | `mix.exs` `elixir:` version vs README. |
+| `go_drifts` | `go.mod` `go` directive vs README. |
+| `java_drifts` | `pom.xml` Maven compiler source/target version vs README. |
 | `kotlin_drifts` | `build.gradle.kts` plugin version vs README. |
+| `node_drifts` | `package.json` `engines.node` vs README. |
+| `php_drifts` | `composer.json` `require.php` vs README. Major.minor comparison. |
+| `python_drifts` | `pyproject.toml` `requires-python` vs README. |
+| `python_version_drifts` | `.python-version` vs `pyproject.toml` `requires-python` floor. |
+| `ruby_drifts` | `Gemfile` `ruby "x.y.z"` vs README. Major.minor comparison. |
+| `rust_drifts` | `rust-toolchain.toml` `channel` and `Cargo.toml` `rust-version` vs README. Minor-aware (patch differences ignored). |
 | `swift_drifts` | `Package.swift` `swift-tools-version` and dependency pins vs README. |
-| `dart_drifts` | `pubspec.yaml` `environment.sdk` constraint vs README. |
 
 ## Package Managers & Lockfiles
 
 | Detector | Description |
 |----------|-------------|
-| `pipfile_drifts` | `Pipfile` vs `Pipfile.lock` version mismatches. |
 | `conda_drifts` | `environment.yml` unpinned packages. |
 | `gradle_catalog_drifts` | `libs.versions.toml` (Gradle version catalog) vs README. |
 | `lockfile_drifts` | Missing, stale, or orphaned lockfiles (informational). |
 | `npmrc_drifts` | `.npmrc` registry vs README mentions. |
+| `package_manager_drifts` | `packageManager` field vs detected lockfile (npm/pnpm/yarn/bun). |
+| `pnpm_drifts` | `pnpm-lock.yaml` version drift vs README. |
+| `pipfile_drifts` | `Pipfile` vs `Pipfile.lock` version mismatches. |
+| `poetry_drifts` | `pyproject.toml` `[tool.poetry]` dependency versions vs README. |
+| `python_version_drifts` | `.python-version` vs `pyproject.toml` `requires-python` floor. |
+| `requirements_drifts` | `requirements.txt` unpinned packages vs known latest. |
 | `yarnrc_drifts` | `.yarnrc.yml` Yarn version vs README mentions. |
-| `pnpm_workspace_drifts` | `pnpm-workspace.yaml` packages vs `package.json` workspaces. |
 
 ## CI/CD
 
@@ -46,44 +53,57 @@ driftcheck ships **60 detector modules** covering **66 registered detectors**. E
 
 | Detector | Description |
 |----------|-------------|
-| `docker_drifts` | `Dockerfile` `FROM <image>:<tag>` vs README. |
 | `dc_drifts` | `docker-compose.yml`/`compose.yaml` image tags vs README. |
+| `devcontainer_drifts` | Devcontainer.json features/base image vs README. |
+| `docker_bases_drifts` | Dockerfile `FROM` base image drift across multi-stage builds. |
+| `docker_drifts` | `Dockerfile` `FROM <image>:<tag>` vs README. |
+| `docker_multistage_drifts` | Multi-stage Dockerfile FROM consistency across stages. |
+| `external_resource_drifts` | Third-party CDN dependencies that break offline rendering (informational). |
 | `k8s_drifts` | Kubernetes manifest image tags vs README. |
-| `helm_drifts` | `Chart.yaml`/`values.yaml` image tags vs README. |
-| `terraform_drifts` | `versions.tf` `required_providers` `version` vs README. |
-|| `env_drifts` | `.env.example` vs `.env`, `docker-compose.yml` vs `docker-compose.prod.yml`. |
-|| `devcontainer_drifts` | Devcontainer.json features/base image vs README. |
 
 ## Build Tools
 
 | Detector | Description |
 |----------|-------------|
-| `makefile_drifts` | Makefile tool version variables (`GCC_VERSION`, `CMAKE_VERSION`, `GO_VERSION`). |
 | `cmake_drifts` | `CMakeLists.txt` `cmake_minimum_required` version vs README. |
-| `maven_drifts` | `pom.xml` `java.version`, `maven.compiler.source/target` vs README. |
 | `java_gradle_drifts` | `build.gradle` `sourceCompatibility`, `jvmTarget` vs README. |
+| `makefile_drifts` | Makefile tool version variables (`GCC_VERSION`, `CMAKE_VERSION`, `GO_VERSION`). |
+| `maven_drifts` | `pom.xml` `java.version`, `maven.compiler.source/target` vs README. |
 | `taskfile_drifts` | `Taskfile.yml` tool version variables vs README. |
+| `terraform_drifts` | `versions.tf` `required_providers` `version` vs README. |
 
 ## Configuration
 
 | Detector | Description |
 |----------|-------------|
-| `tool_versions_drifts` | `.tool-versions` (asdf/mise) — Node, Python, Go, Rust, Ruby, Java, PHP, .NET. |
-| `mise_drifts` | `mise.toml` `[tools]` section vs README. |
-| `version_files_drifts` | `.ruby-version`, `.python-version`, `.node-version`, etc. vs README. |
-| `nvmrc_drifts` | `.nvmrc` vs `package.json` engines.node (informational). |
 | `dependabot_drifts` | Ecosystems used but not covered by `.github/dependabot.yml` (informational). |
-|| `git_tag_drifts` | Latest git tag vs README version mentions. |
-|| `pre_commit_drifts` | Pre-commit hook versions vs `.pre-commit-config.yaml`. |
+| `editorconfig_drifts` | `.editorconfig` indent_size/indent_style consistency vs project convention. |
+| `engines_drifts` | `package.json` `engines` field consistency across package managers. |
+| `git_tag_drifts` | Latest git tag vs README version mentions. |
+| `mise_drifts` | `mise.toml` `[tools]` section vs README. |
+| `nvmrc_drifts` | `.nvmrc` vs `package.json` engines.node (informational). |
+| `pre_commit_drifts` | Pre-commit hook versions vs `.pre-commit-config.yaml`. |
+| `tool_versions_drifts` | `.tool-versions` (asdf/mise) — Node, Python, Go, Rust, Ruby, Java, PHP, .NET. |
+| `version_files_drifts` | `.ruby-version`, `.python-version`, `.node-version`, etc. vs README. |
 
 ## Other
 
 | Detector | Description |
 |----------|-------------|
-| `lineending_drifts` | Missing `* text=auto eol=lf` in `.gitattributes` (informational). |
-| `external_resource_drifts` | Third-party CDN dependencies that break offline rendering (informational). |
 | `count_drifts` | `skills/` directory count vs README mentions of "N skills". |
+| `env_drifts` | `.env.example` vs `.env`, `docker-compose.yml` vs `docker-compose.prod.yml`. |
+| `external_resource_drifts` | Third-party CDN dependencies that break offline rendering (informational). |
+| `fix_drifts` | Auto-correct detected drifts in documentation files (fix application module). |
+| `lineending_drifts` | Missing `* text=auto eol=lf` in `.gitattributes` (informational). |
+| `package_manager_drifts` | `packageManager` field vs detected lockfile (npm/pnpm/yarn/bun). |
 | `plugin_<name>_drifts` | Custom drift detection via plugins. |
+| `pnpm_drifts` | `pnpm-lock.yaml` version drift vs README. |
+| `poetry_drifts` | `pyproject.toml` `[tool.poetry]` dependency versions vs README. |
+| `python_version_drifts` | `.python-version` vs `pyproject.toml` `requires-python` floor. |
+| `requirements_drifts` | `requirements.txt` unpinned packages vs known latest. |
+| `renovate_drifts` | `renovate.json` configuration health checks (packageRules, managerPolicy). |
+| `typosquat_drifts` | Suspicious package names similar to popular packages (security). |
+| `vscode_drifts` | `extensions.json` recommendations vs README mentions. |
 
 ## Detector Aliases
 

@@ -26,7 +26,7 @@ This modifies the doc files (README.md, CONTRIBUTING.md, etc.) to match the tool
 
 ## List Detectors
 
-See all 60 available detectors:
+See all 66 registered detectors:
 
 ```bash
 driftcheck --list-detectors
