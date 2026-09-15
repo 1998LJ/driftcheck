@@ -387,3 +387,8 @@ pre-commit install
 | Security | typosquat | `typosquat_drifts` | Typosquat detection in dependencies (informational) |
 | Terraform | terraform | `terraform_drifts` | Terraform versions.tf provider |
 | Terraform | terraform-version | `terraform_version_drifts` | .terraform-version vs README |
+
+## Security
+
+Security is important to us. Please see our [Security Policy](SECURITY.md) for supported versions and instructions on how to report vulnerabilities responsibly.
+
