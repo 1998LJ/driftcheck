@@ -66,7 +66,7 @@ def find_lockfile_drift(root: Path) -> list[dict]:
         if not found_lockfile:
             # No lockfile found for this manifest
             # Only flag for package managers where lockfiles are standard
-            if manifest in ("package.json", "Cargo.toml", "go.mod", "Gemfile", "composer.json"):
+            if manifest in ("package.json", "Cargo.toml", "go.mod", "Gemfile", "composer.json", "pyproject.toml", "requirements.txt"):
                 drifts.append({
                     "file": lockfiles[0],
                     "kind": "lockfile_missing",

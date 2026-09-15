@@ -136,3 +136,17 @@ class TestFindLockfileDrift:
         result = find_lockfile_drift(tmp_path)
         missing = [r for r in result if r["kind"] == "lockfile_missing"]
         assert len(missing) == 0
+
+    def test_missing_pyproject_lock(self, tmp_path):
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        result = find_lockfile_drift(tmp_path)
+        assert len(result) == 1
+        assert result[0]["kind"] == "lockfile_missing"
+        assert "poetry.lock" in result[0]["detail"]
+
+    def test_missing_requirements_lock(self, tmp_path):
+        (tmp_path / "requirements.txt").write_text("requests==2.31.0")
+        result = find_lockfile_drift(tmp_path)
+        assert len(result) == 1
+        assert result[0]["kind"] == "lockfile_missing"
+        assert "requirements.txt.lock" in result[0]["detail"]

@@ -2,13 +2,13 @@
 
 ## Core Stats
 - **61 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
-- **65 registered detectors** (imported in `src/driftcheck/detectors/__init__.py`)
-- **65 total find_* functions** (including split environment detectors, lockfile variants, Nix)
-- **1103 tests** with >95% code coverage
+- **68 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
+- **63 find_*_drift functions** exported from top-level `__init__.py` (plus `to_sarif`); 2 additional internal helpers (`find_env_drift_combined`, `find_rust_drift_multi`)
+- **1105 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
-- `2414515` docs: correct detector counts to 62 modules, 63 registered detectors
+- `2414515` docs: correct detector counts to 61 modules, 61 registered detectors
 - `43d2f86` feat: add Nix flake.lock drift detection
 - `f8231a6` docs: correct detector module count to 60 (actual files in detectors/)
 - `348fcb0` docs: correct detector counts to match codebase reality (61 modules, 64 registered)
