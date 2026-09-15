@@ -62,8 +62,8 @@ def parse_requires_python(text: str) -> tuple[int, int, int] | None:
     m = re.search(r'requires-python\s*=\s*["\']?[>=~<]*\s*(\d+\.\d+(?:\.\d+)?)', text)
     if m:
         return _normalize_version(m.group(1))
-    # Also check setup.cfg: python_requires = >=3.8
-    m = re.search(r'python_requires\s*=\s*[>=~<]*\s*(\d+\.\d+(?:\.\d+)?)', text)
+    # Also check setup.cfg / setup.py: python_requires = ">=3.8" or python_requires = >=3.8
+    m = re.search(r'python_requires\s*=\s*["\']?[>=~<]*\s*(\d+\.\d+(?:\.\d+)?)', text)
     if m:
         return _normalize_version(m.group(1))
     return None
@@ -73,6 +73,7 @@ def find_python_version_file_drift(
     python_version_text: str | None,
     pyproject_text: str | None,
     setup_cfg_text: str | None = None,
+    setup_py_text: str | None = None,
 ) -> list[dict]:
     """Detect drift between .python-version and requires-python floor.
 
@@ -90,7 +91,7 @@ def find_python_version_file_drift(
     if pin is None:
         return drifts  # Unparseable — informational, not blocking
 
-    # Determine floor from pyproject.toml or setup.cfg
+    # Determine floor from pyproject.toml, setup.cfg, or setup.py (in order of modern precedence)
     floor = None
     source = None
     if pyproject_text:
@@ -99,6 +100,9 @@ def find_python_version_file_drift(
     if floor is None and setup_cfg_text:
         floor = parse_requires_python(setup_cfg_text)
         source = "setup.cfg"
+    if floor is None and setup_py_text:
+        floor = parse_requires_python(setup_py_text)
+        source = "setup.py"
 
     if floor is None:
         return drifts  # No floor to compare against
