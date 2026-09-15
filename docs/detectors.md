@@ -1,6 +1,6 @@
 # Detectors
 
-driftcheck ships **60 detector modules** covering **66 registered detectors**. Each checks for a specific kind of version drift between toolchain files and documentation.
+driftcheck ships **60 detector modules** covering **63 registered detectors**. Each checks for a specific kind of version drift between toolchain files and documentation.
 
 ## Language Runtimes
 
@@ -53,12 +53,14 @@ driftcheck ships **60 detector modules** covering **66 registered detectors**. E
 
 | Detector | Description |
 |----------|-------------|
+| `compose_drifts` | Docker Compose service image/tag drift vs README. |
 | `dc_drifts` | `docker-compose.yml`/`compose.yaml` image tags vs README. |
 | `devcontainer_drifts` | Devcontainer.json features/base image vs README. |
 | `docker_bases_drifts` | Dockerfile `FROM` base image drift across multi-stage builds. |
 | `docker_drifts` | `Dockerfile` `FROM <image>:<tag>` vs README. |
 | `docker_multistage_drifts` | Multi-stage Dockerfile FROM consistency across stages. |
-| `external_resource_drifts` | Third-party CDN dependencies that break offline rendering (informational). |
+| `env_drift_drifts` | `.env.example` vs `.env`, `docker-compose.yml` vs `docker-compose.prod.yml`. |
+| `external_drifts` | Third-party CDN dependencies that break offline rendering (informational). |
 | `k8s_drifts` | Kubernetes manifest image tags vs README. |
 
 ## Build Tools
@@ -91,9 +93,10 @@ driftcheck ships **60 detector modules** covering **66 registered detectors**. E
 | Detector | Description |
 |----------|-------------|
 | `count_drifts` | `skills/` directory count vs README mentions of "N skills". |
-| `env_drifts` | `.env.example` vs `.env`, `docker-compose.yml` vs `docker-compose.prod.yml`. |
-| `external_resource_drifts` | Third-party CDN dependencies that break offline rendering (informational). |
+| `env_drift_drifts` | `.env.example` vs `.env`, `docker-compose.yml` vs `docker-compose.prod.yml`. |
+| `external_drifts` | Third-party CDN dependencies that break offline rendering (informational). |
 | `fix_drifts` | Auto-correct detected drifts in documentation files (fix application module). |
+| `helm_drifts` | `Chart.yaml`/`values.yaml` image tags vs README. |
 | `lineending_drifts` | Missing `* text=auto eol=lf` in `.gitattributes` (informational). |
 | `package_manager_drifts` | `packageManager` field vs detected lockfile (npm/pnpm/yarn/bun). |
 | `plugin_<name>_drifts` | Custom drift detection via plugins. |
