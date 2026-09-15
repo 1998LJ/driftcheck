@@ -21,66 +21,70 @@
 ## Note on Count
 There are **61 detector module files** in `src/driftcheck/detectors/` (62 Python files including `__init__.py`, which is not a detector module — it just imports them). The README previously said "62 detector modules" (commit `2414515`) but was corrected to **61 detector modules** in commit `2414515` follow-up.
 
-## Detectors Not Listed in README "Checks" Section
-The following detectors exist in `src/driftcheck/detectors/` but are NOT listed in the README "Checks" section:
+## Detectors Documented in README "Checks" Section
+All 61 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
 
-| Detector | File | Notes |
-|----------|------|-------|
-| Actions | `actions.py` | GitHub Actions version drift |
-| Bazel | `bazel.py` | Bazel version drift |
-| Bun | `bun.py` | Bun version drift |
-| CI OS | `ci_os.py` | Deprecated GitHub Actions runners |
-| CircleCI | `circleci.py` | CircleCI image drift |
-| CMake | `cmake.py` | CMake version drift |
-| Compose | `compose.py` | Docker Compose image drift |
-| Conda | `conda.py` | Conda environment drift |
-| Count | `count.py` | Skills count drift |
-| Dart | `dart.py` | Dart/Flutter SDK drift |
-| Deno | `deno.py` | Deno version drift |
-| Dependabot | `dependabot.py` | Dependabot coverage drift |
-| Docker Bases | `docker_bases.py` | Dockerfile base image drift |
-| Docker Multistage | `docker_multistage.py` | Multistage Dockerfile drift |
-| EditorConfig | `editorconfig.py` | EditorConfig drift |
-| Elixir | `elixir.py` | Elixir version drift |
-| Engines | `engines.py` | Engines drift |
-| Env Drift | `env_drift.py` | Environment file drift |
-| External | `external.py` | External resource drift |
-| GitLab CI | `gitlab.py` | GitLab CI image drift |
-| Git Tag | `git_tag.py` | Git tag vs README drift |
-| Go | `go.py` | Go version drift |
-| Gradle Catalog | `gradle_catalog.py` | Gradle catalog drift |
-| Helm | `helm.py` | Helm chart drift |
-| Java | `java.py` | Java version drift |
-| Jenkins | `jenkins.py` | Jenkins tool drift |
-| K8s | `k8s.py` | Kubernetes manifest drift |
-| Kotlin | `kotlin.py` | Kotlin version drift |
-| Line Endings | `lineending.py` | Line ending drift |
-| Lockfile | `lockfile.py` | Lockfile presence drift |
-| Makefile | `makefile.py` | Makefile tool drift |
-| Maven | `maven.py` | Maven version drift |
-| Mise | `mise.py` | Mise tool drift |
-| Nix | `nix.py` | Nix flake.lock drift |
-| NPMRC | `npmrc.py` | NPMRC registry drift |
-| NVMRC | `nvmrc.py` | NVMRC version drift |
-| Package Manager | `package_manager.py` | Package manager drift |
-| PHP | `php.py` | PHP version drift |
-| Pipfile | `pipfile.py` | Pipfile lock drift |
-| PNPM | `pnpm.py` | PNPM lock drift |
-| Poetry | `poetry.py` | Poetry lock drift |
-| Python | `python.py` | Python version drift |
-| Python Version | `python_version.py` | Python version file drift |
-| Requirements | `requirements.py` | Requirements drift |
-| Ruby | `ruby.py` | Ruby version drift |
-| Rust | `rust.py` | Rust toolchain drift |
-| Swift | `swift.py` | Swift version drift |
-| Taskfile | `taskfile.py` | Taskfile drift |
-| Terraform | `terraform.py` | Terraform provider drift |
-| Tool Versions | `tool_versions.py` | Tool versions drift |
-| Typosquat | `typosquat.py` | Typosquat drift |
-| Version Files | `version_files.py` | Version file drift |
-| VSCode | `vscode.py` | VSCode extension drift |
-| Yarn RC | `yarnrc.py` | Yarn RC drift |
-| Pre-commit | `pre_commit.py` | Pre-commit rev drift |
-| Devcontainer | `devcontainer.py` | Devcontainer image drift |
-| Renovate | `renovate.py` | Renovate config drift |
+| File | README Display Name |
+|------|---------------------|
+| `actions.py` | GitHub Actions |
+| `bazel.py` | Bazel |
+| `bun.py` | Bun |
+| `ci_os.py` | CI OS |
+| `circleci.py` | CircleCI |
+| `cmake.py` | CMake |
+| `compose.py` | Docker Compose |
+| `conda.py` | Conda |
+| `count.py` | Count |
+| `dart.py` | Dart/Flutter |
+| `deno.py` | Deno |
+| `dependabot.py` | Dependabot |
+| `devcontainer.py` | Devcontainer |
+| `docker.py` | Docker |
+| `docker_bases.py` | (part of Docker) |
+| `docker_multistage.py` | (part of Docker) |
+| `dotnet.py` | .NET/C# |
+| `editorconfig.py` | (Configuration) |
+| `elixir.py` | Elixir |
+| `engines.py` | (part of Node) |
+| `env_drift.py` | Environment drift |
+| `external.py` | External resources |
+| `fix.py` | (internal) |
+| `gitlab.py` | GitLab CI |
+| `git_tag.py` | Git Tag |
+| `go.py` | Go |
+| `gradle_catalog.py` | Gradle Version Catalog |
+| `helm.py` | Helm |
+| `java.py` | Java/Gradle |
+| `jenkins.py` | Jenkins |
+| `k8s.py` | Kubernetes |
+| `kotlin.py` | Kotlin |
+| `lineending.py` | Line endings |
+| `lockfile.py` | Lockfile |
+| `makefile.py` | Makefile |
+| `maven.py` | Maven |
+| `mise.py` | Mise |
+| `nix.py` | Nix |
+| `node.py` | Node |
+| `npmrc.py` | NPMRC |
+| `nvmrc.py` | NVMRC |
+| `package_manager.py` | (part of lockfile) |
+| `php.py` | PHP |
+| `pipfile.py` | Pipfile |
+| `pnpm.py` | PNPM workspace |
+| `poetry.py` | (part of Python) |
+| `pre_commit.py` | Pre-commit |
+| `python.py` | Python |
+| `python_version.py` | (part of Python) |
+| `renovate.py` | Renovate |
+| `requirements.py` | (part of Python) |
+| `ruby.py` | Ruby |
+| `rust.py` | Rust |
+| `swift.py` | Swift |
+| `taskfile.py` | (Configuration) |
+| `terraform.py` | Terraform |
+| `tool_versions.py` | Tool versions |
+| `typosquat.py` | (Security) |
+| `version_files.py` | Version files |
+| `vscode.py` | (Configuration) |
+| `yarnrc.py` | Yarn RC |
 
