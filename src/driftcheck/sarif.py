@@ -11,11 +11,6 @@ SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
 
 # Drift type metadata: (rule_id, rule_name, rule_description)
 DRIFT_RULES = {
-    "drifts": (
-        "rust-toolchain-version-drift",
-        "Rust Toolchain Version Drift",
-        "README documentation references a Rust version that doesn't match rust-toolchain.toml",
-    ),
     "rust_drifts": (
         "rust-cargo-version-drift",
         "Rust Cargo Version Drift",
@@ -364,9 +359,7 @@ def _make_result(
 
 def _drift_message(drift_type: str, d: dict) -> str:
     """Generate human-readable message for a drift entry."""
-    if drift_type == "drifts":
-        return f"Rust {d.get('doc_version')} in docs should be {d.get('toolchain_version')}"
-    elif drift_type == "rust_drifts":
+    if drift_type == "rust_drifts":
         target = d.get("toolchain_version") or d.get("cargo_version")
         return f"Rust {d.get('doc_version')} in docs should be {target}"
     elif drift_type == "node_drifts":
@@ -505,7 +498,7 @@ def to_sarif(result: dict, version: str | None = None) -> dict:
 
     # All possible drift keys in the result
     drift_keys = [
-        "drifts", "rust_drifts", "node_drifts", "bun_drifts", "python_drifts",
+        "rust_drifts", "node_drifts", "bun_drifts", "python_drifts",
         "go_drifts", "count_drifts", "actions_drifts", "lineending_drifts",
         "docker_drifts", "docker_multistage_drifts", "docker_bases_drifts", "java_drifts", "maven_drifts", "terraform_drifts",
         "circleci_drifts", "gitlab_drifts", "gh_actions_version_drifts",

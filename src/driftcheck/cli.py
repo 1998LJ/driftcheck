@@ -12,7 +12,6 @@ INFORMATIONAL_DRIFTS = {"external_resource_drifts", "dependabot_drifts", "lockfi
 
 # Detector metadata: key -> (short_name, description)
 DETECTOR_INFO = {
-    "drifts": ("rust-toolchain", "Rust toolchain.toml channel vs README"),
     "rust_drifts": ("rust-cargo", "Rust Cargo.toml rust-version vs README"),
     "node_drifts": ("node", "Node.js package.json engines vs README"),
     "bun_drifts": ("bun", "Bun package.json engines.bun vs README"),
@@ -101,7 +100,7 @@ def main(argv=None) -> int:
     ap.add_argument("--report", action="store_true", help="output a markdown report (for CI job summaries / PR comments)")
     ap.add_argument("--init", action="store_true", help="generate a .driftcheck.toml config file and exit)")
     ap.add_argument("--git-mode", action="store_true", help="only scan files changed since --git-base (default: HEAD~1)")
-    ap.add_argument("--git-base", metavar="COMMIT", default="HEAD~1", help="base commit for --git-mode (default: HEAD~1)")
+    ap.add_argument("--git-base", metavar="COMMIT", default="HEAD~1", help="base commit for --git-mode (default: HEAD~1); validated against strict ref format")
     args = ap.parse_args(argv)
 
     if args.list_detectors:
@@ -417,8 +416,6 @@ def _list_detectors() -> None:
 
 def _print_blocking_drifts(all_drifts: dict, result: dict) -> None:
     """Print all blocking drift types."""
-    for d in all_drifts.get("drifts", []):
-        print(f"driftcheck: {d['file']}: Rust {d['doc_version']} → should be {d['toolchain_version']}")
     for d in all_drifts.get("rust_drifts", []):
         target = d.get("toolchain_version") or d.get("cargo_version")
         print(f"driftcheck: {d['file']}: Rust {d['doc_version']} → should be {target}")
