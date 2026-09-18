@@ -542,6 +542,29 @@ def to_sarif(result: dict, version: str | None = None) -> dict:
                 _make_result(rule_id, message, file, level=level, pos=d.get("pos", 0))
             )
 
+    # Process skipped symlinks as suppressed results (issue #128)
+    # When follow_symlinks=False, skipped symlinks are reported at severity:note
+    # with a `suppressions` field indicating they were intentionally skipped.
+    skipped_symlinks = result.get("_skipped_symlinks", [])
+    if skipped_symlinks:
+        rule_id = "symlink-skipped"
+        if rule_id not in rule_set:
+            rules.append({
+                "id": rule_id,
+                "name": "Symlink Skipped",
+                "shortDescription": {"text": "A symlink was skipped due to follow_symlinks=false policy."},
+                "defaultConfiguration": {"level": "note"},
+            })
+            rule_set.add(rule_id)
+
+        for entry in skipped_symlinks:
+            results.append({
+                "ruleId": rule_id,
+                "level": "note",
+                "message": {"text": entry},
+                "suppressions": [{"kind": "inSource", "justification": "follow_symlinks=false policy"}],
+            })
+
     return {
         "$schema": SARIF_SCHEMA,
         "version": "2.1.0",

@@ -138,3 +138,20 @@ def test_sarif_multiple_same_rule_dedup():
     assert len(rules) == 1
     assert rules[0]["id"] == "rust-cargo-version-drift"
     assert len(doc["runs"][0]["results"]) == 2
+
+
+def test_sarif_skipped_symlinks():
+    """SARIF output includes skipped symlinks as suppressed results (issue #128)."""
+    result = _empty_result()
+    result["_skipped_symlinks"] = [
+        "Symlink 'secret' -> '/etc/hostname' skipped (outside repo root)",
+    ]
+    doc = to_sarif(result, version="0.1.45")
+    
+    sarif_results = doc["runs"][0]["results"]
+    assert len(sarif_results) == 1
+    assert sarif_results[0]["ruleId"] == "symlink-skipped"
+    assert sarif_results[0]["level"] == "note"
+    assert "secret" in sarif_results[0]["message"]["text"]
+    assert len(sarif_results[0]["suppressions"]) == 1
+    assert sarif_results[0]["suppressions"][0]["kind"] == "inSource"

@@ -17,6 +17,54 @@ from typing import Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .config import load_config, get_excluded_detectors
 from .plugins import load_plugins, run_plugin_detectors
+
+
+def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], list[str]]:
+    """Walk directory tree, respecting symlink policy.
+    
+    Args:
+        root: repo root path
+        follow_symlinks: if False, skip symlinks pointing outside root
+    
+    Returns:
+        Tuple of (file_paths, skipped_symlinks) where skipped_symlinks are
+        human-readable strings describing skipped links for SARIF output.
+    """
+    files: set[Path] = set()
+    skipped: list[str] = []
+    root_resolved = root.resolve()
+    
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        dirpath_path = Path(dirpath)
+        for fname in filenames:
+            fpath = dirpath_path / fname
+            if fpath.is_symlink():
+                try:
+                    target = fpath.resolve()
+                    if follow_symlinks or str(target).startswith(str(root_resolved)):
+                        files.add(fpath)
+                    else:
+                        skipped.append(
+                            f"Symlink '{fpath.relative_to(root)}' -> '{target}' skipped (outside repo root)"
+                        )
+                except OSError:
+                    skipped.append(
+                        f"Symlink '{fpath.relative_to(root)}' skipped (broken or inaccessible)"
+                    )
+            else:
+                files.add(fpath)
+    return files, skipped
+
+
+def _safe_glob(root: Path, pattern: str, walked_files: set[Path], follow_symlinks: bool = True):
+    """Wrap Path.glob to respect symlink policy.
+    
+    When follow_symlinks is False, only yield files that appear in walked_files
+    (i.e., files found by os.walk which skips external symlinks).
+    """
+    for p in root.glob(pattern):
+        if follow_symlinks or p in walked_files:
+            yield p
 from .detectors import (
     parse_toolchain_version,
     find_rust_drift,
@@ -169,6 +217,10 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     """
     config = load_config(root)
     excluded = get_excluded_detectors(config)
+    follow_symlinks = config.get("follow_symlinks", True)
+
+    # Walk files with symlink policy (issue #128)
+    walked_files, skipped_symlinks = _walk_files(root, follow_symlinks=follow_symlinks)
 
     # Filter detectors if git-mode is active
     if enabled_detectors is not None:
@@ -183,7 +235,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     custom_doc_paths = config.get("doc_paths")
     if custom_doc_paths:
         for pattern in custom_doc_paths:
-            for p in root.glob(pattern):
+            for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
                 if p.is_file():
                     candidates.append(p)
     docs = {}
@@ -199,67 +251,67 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     cargo_path = root / "Cargo.toml"
     cargo_text = cargo_path.read_text(encoding="utf-8", errors="replace") if cargo_path.exists() else ""
     
-    # Dockerfiles
+    # Dockerfiles (respect follow_symlinks policy)
     dockerfiles = {}
     for pattern in ["Dockerfile", "Dockerfile.*", "docker/Dockerfile", "docker/Dockerfile.*"]:
-        for p in root.glob(pattern):
-            if p.is_file():
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
+            if p.is_file() and (follow_symlinks or p in walked_files):
                 dockerfiles[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     
     # Gradle build files
     gradle_files = {}
     for pattern in ["build.gradle", "build.gradle.kts", "gradle/build.gradle", "gradle/build.gradle.kts"]:
-        for p in root.glob(pattern):
-            if p.is_file():
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
+            if p.is_file() and (follow_symlinks or p in walked_files):
                 gradle_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     
     # Maven pom.xml files
     maven_files = {}
     for pattern in ["pom.xml", "maven/pom.xml"]:
-        for p in root.glob(pattern):
-            if p.is_file():
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
+            if p.is_file() and (follow_symlinks or p in walked_files):
                 maven_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     
     # Terraform files
     terraform_files = {}
     for pattern in ["versions.tf", "*.tf", "terraform/*.tf"]:
-        for p in root.glob(pattern):
-            if p.is_file():
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
+            if p.is_file() and (follow_symlinks or p in walked_files):
                 terraform_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     
     # CircleCI config files
     circleci_files = {}
     for pattern in [".circleci/config.yml", ".circleci/config.yaml"]:
-        for p in root.glob(pattern):
-            if p.is_file():
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
+            if p.is_file() and (follow_symlinks or p in walked_files):
                 circleci_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     
     # GitLab CI config files
     gitlab_files = {}
     for pattern in [".gitlab-ci.yml", ".gitlab-ci.yaml"]:
-        for p in root.glob(pattern):
-            if p.is_file():
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
+            if p.is_file() and (follow_symlinks or p in walked_files):
                 gitlab_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     
     # Kubernetes manifests
     k8s_files = {}
     for pattern in ["k8s/**/*.yaml", "k8s/**/*.yml", "kubernetes/**/*.yaml", "kubernetes/**/*.yml", "deploy/**/*.yaml", "deploy/**/*.yml"]:
-        for p in root.glob(pattern):
-            if p.is_file():
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
+            if p.is_file() and (follow_symlinks or p in walked_files):
                 k8s_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
 
-    # Docker Compose files
+    # Docker Compose files (respect follow_symlinks policy)
     dc_files = {}
     for pattern in ["docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml", "docker/docker-compose.yml"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 dc_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
 
 
-    # Helm chart files
+    # Helm chart files (respect follow_symlinks policy)
     helm_files = {}
     for pattern in ["Chart.yaml", "charts/**/Chart.yaml", "values.yaml", "charts/**/values.yaml", "charts/**/values.*.yaml"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 helm_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
 
@@ -283,10 +335,10 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     nvmrc_path = root / ".nvmrc"
     nvmrc_text = nvmrc_path.read_text(encoding="utf-8", errors="replace") if nvmrc_path.exists() else ""
 
-    # .NET / C# project files
+    # .NET / C# project files (respect follow_symlinks policy)
     csproj_files = {}
     for pattern in ["*.csproj", "**/*.csproj", "src/**/*.csproj", "tests/**/*.csproj"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 csproj_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
 
@@ -297,7 +349,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # Dart/Flutter pubspec
     pubspec_files = {}
     for pattern in ["pubspec.yaml", "pubspec.yml"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 pubspec_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     pubspec_text = "\n".join(pubspec_files.values()) if pubspec_files else ""
@@ -341,7 +393,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # Deno
     deno_files = {}
     for pattern in ["deno.json", "deno.jsonc", "deno/deno.json", "deno/deno.jsonc"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 deno_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     deno_text = "\n".join(deno_files.values()) if deno_files else ""
@@ -350,7 +402,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # Makefile
     makefile_files = {}
     for pattern in ["Makefile", "makefile", "GNUmakefile", "make/*.mk", "Makefile.*"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 makefile_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
 
@@ -365,7 +417,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # CMake
     cmake_files = {}
     for pattern in ["CMakeLists.txt", "cmake/CMakeLists.txt", "src/CMakeLists.txt"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 cmake_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     cmake_text = "\n".join(cmake_files.values()) if cmake_files else ""
@@ -386,7 +438,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # Kotlin (build.gradle.kts)
     gradle_kts_files = {}
     for pattern in ["build.gradle.kts", "gradle/build.gradle.kts"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 gradle_kts_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     gradle_kts_text = "\n".join(gradle_kts_files.values()) if gradle_kts_files else ""
@@ -407,7 +459,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     jenkins_files = {}
     seen_jenkins_paths = set()
     for pattern in ["Jenkinsfile", "jenkins/Jenkinsfile", "Jenkinsfile.*"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file() and p not in seen_jenkins_paths:
                 seen_jenkins_paths.add(p)
                 jenkins_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
@@ -417,7 +469,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # Version files (.ruby-version, .python-version, .node-version, .java-version, .terraform-version)
     version_files = {}
     for pattern in [".ruby-version", ".python-version", ".node-version", ".java-version", ".terraform-version"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 version_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
 
@@ -483,7 +535,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     # Devcontainer
     devcontainer_files = {}
     for pattern in [".devcontainer/devcontainer.json", ".devcontainer/*.devcontainer.json", "devcontainer.json"]:
-        for p in root.glob(pattern):
+        for p in _safe_glob(root, pattern, walked_files, follow_symlinks):
             if p.is_file():
                 devcontainer_files[str(p.relative_to(root))] = p.read_text(encoding="utf-8", errors="replace")
     devcontainer_text = "\n".join(devcontainer_files.values()) if devcontainer_files else ""
@@ -577,6 +629,10 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None)
     for key in list(result.keys()):
         if key in excluded:
             del result[key]
+
+    # Include skipped symlinks for SARIF suppressed results (issue #128)
+    if skipped_symlinks:
+        result["_skipped_symlinks"] = skipped_symlinks
 
     return result
 
