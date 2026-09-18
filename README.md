@@ -335,6 +335,10 @@ pre-commit install
 - **Plugin system** for custom detectors
 - **Pre-commit hook** support
 
+### Python API
+
+See the [API Reference](docs/api.md) for embedding driftcheck in scripts and CI pipelines.
+
 ### Detector Comparison Matrix
 
 | Ecosystem | Detector | Drift Key | Example Detected |
