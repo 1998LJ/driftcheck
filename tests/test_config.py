@@ -26,9 +26,21 @@ class TestParseToml:
         assert result == {"exclude": ["node", "python"]}
 
     def test_section(self):
-        text = "[driftcheck]\nexclude = [\"node\"]\nverbose = true"
+        text = '[driftcheck]\nexclude = ["node"]\nverbose = true'
         result = _parse_toml(text)
         assert result == {"driftcheck": {"exclude": ["node"], "verbose": True}}
+
+    def test_multiline_array(self):
+        """Multi-line arrays are supported by tomllib (issue #151)."""
+        text = 'exclude = [\n    "node",\n    "python",\n]'
+        result = _parse_toml(text)
+        assert result == {"exclude": ["node", "python"]}
+
+    def test_nested_section(self):
+        """Nested TOML sections work with tomllib (issue #151)."""
+        text = '[driftcheck]\nverbose = true\n\n[driftcheck.custom]\nkey = "value"'
+        result = _parse_toml(text)
+        assert result == {"driftcheck": {"verbose": True, "custom": {"key": "value"}}}
 
 
 class TestLoadConfig:

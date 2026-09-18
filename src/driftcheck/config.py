@@ -4,6 +4,7 @@ Reads .driftcheck.toml from repo root to customize detection behavior.
 """
 from __future__ import annotations
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -50,47 +51,12 @@ DEFAULT_CONFIG = {
 
 
 def _parse_toml(text: str) -> dict[str, Any]:
-    """Minimal TOML parser for the subset we need (no dependency on tomli)."""
-    config: dict[str, Any] = {}
-    current_section = None
-    for line in text.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if stripped.startswith("[") and stripped.endswith("]"):
-            current_section = stripped[1:-1].strip()
-            if current_section not in config:
-                config[current_section] = {}
-            continue
-        if "=" in stripped:
-            key, _, value = stripped.partition("=")
-            key = key.strip()
-            value = value.strip().strip('"').strip("'")
-            # Try to parse as list
-            if value.startswith("[") and value.endswith("]"):
-                inner = value[1:-1].strip()
-                if inner:
-                    items = [v.strip().strip('"').strip("'") for v in inner.split(",")]
-                else:
-                    items = []
-                parsed: Any = items
-            elif value.lower() == "true":
-                parsed = True
-            elif value.lower() == "false":
-                parsed = False
-            else:
-                try:
-                    parsed = int(value)
-                except ValueError:
-                    try:
-                        parsed = float(value)
-                    except ValueError:
-                        parsed = value
-            if current_section:
-                config[current_section][key] = parsed
-            else:
-                config[key] = parsed
-    return config
+    """Parse TOML config from text using the standard library (tomllib/tomli)."""
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        import tomli as tomllib
+    return tomllib.loads(text)
 
 
 def load_config(root: Path = Path(".")) -> dict[str, Any]:
