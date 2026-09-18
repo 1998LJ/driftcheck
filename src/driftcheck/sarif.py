@@ -5,6 +5,7 @@ GitLab Vulnerability Reports, and any other consumer that speaks SARIF.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
@@ -485,8 +486,29 @@ def _drift_message(drift_type: str, d: dict) -> str:
     return str(d)
 
 
-def to_sarif(result: dict, version: str | None = None) -> dict:
-    """Convert driftcheck scan result to SARIF 2.1.0 document."""
+def _make_relative_path(file: str, root: Path | None) -> str:
+    """Make a path relative to root for SARIF output privacy.
+
+    Absolute paths can leak usernames and internal directory structure
+    in public CI logs and GitHub Code Scanning uploads.
+    """
+    if root is None:
+        return file
+    try:
+        return str(Path(file).relative_to(root))
+    except ValueError:
+        return Path(file).name  # fallback to basename
+
+
+def to_sarif(result: dict, version: str | None = None, root: Path | None = None) -> dict:
+    """Convert driftcheck scan result to SARIF 2.1.0 document.
+
+    Args:
+        result: scan result dict from scan_repo()
+        version: driftcheck version string
+        root: if provided, all file paths in SARIF output are made relative
+            to this root to prevent leaking absolute paths in CI logs
+    """
     if version is None:
         try:
             from . import __version__ as version
@@ -536,7 +558,7 @@ def to_sarif(result: dict, version: str | None = None) -> dict:
         level = "warning" if is_informational else "error"
 
         for d in entries:
-            file = d.get("file", "")
+            file = _make_relative_path(d.get("file", ""), root)
             message = _drift_message(drift_type, d)
             results.append(
                 _make_result(rule_id, message, file, level=level, pos=d.get("pos", 0))
