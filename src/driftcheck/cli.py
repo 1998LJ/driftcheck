@@ -111,6 +111,7 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true", dest="as_json", help="JSON output")
     ap.add_argument("--csv", action="store_true", dest="as_csv", help="CSV output (for spreadsheets/data pipelines)")
     ap.add_argument("--sarif", action="store_true", dest="as_sarif", help="SARIF 2.1.0 output (for GitHub Code Scanning)")
+    ap.add_argument("--absolute-paths", action="store_true", default=False, help="use absolute paths in SARIF output (default: relative for CI privacy)")
     ap.add_argument("--fix", action="store_true", help="auto-fix detected drifts in documentation files")
     ap.add_argument("--version", action="version", version=_version())
     ap.add_argument("--quiet", "-q", action="store_true", help="only output drifts, suppress OK messages")
@@ -172,7 +173,8 @@ def main(argv=None) -> int:
 
     if args.as_sarif:
         from . import __version__
-        sarif_doc = to_sarif(result, version=__version__)
+        root = Path(args.path) if not args.absolute_paths else None
+        sarif_doc = to_sarif(result, version=__version__, root=root)
         print(json.dumps(sarif_doc, indent=2))
         blocking = {k: result.get(k, []) for k in DRIFT_KEYS if k not in INFORMATIONAL_DRIFTS}
         return 1 if any(blocking.values()) else 0
