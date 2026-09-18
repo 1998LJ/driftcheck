@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+import warnings
 
 from .config import DRIFT_KEYS, get_excluded_detectors, load_config
 from .plugins import load_plugins, run_plugin_detectors
@@ -199,6 +200,7 @@ def _read_files_parallel(root: Path, patterns: list[str]) -> str:
     """Read multiple files in parallel using ThreadPoolExecutor.
 
     Returns concatenated file contents separated by newlines.
+    Files that fail to read are logged to stderr via warnings.
     """
     files = []
     for pattern in patterns:
@@ -210,18 +212,25 @@ def _read_files_parallel(root: Path, patterns: list[str]) -> str:
         return ""
 
     contents = []
+    failed = []
     with ThreadPoolExecutor(max_workers=min(8, len(files))) as executor:
         futures = {
             executor.submit(_read_text_safe, p, max_size=1_000_000): p
             for p in files
         }
         for future in as_completed(futures):
+            path = futures[future]
             try:
                 result = future.result()
                 if result is not None:
                     contents.append(result)
-            except Exception:
-                pass
+            except Exception as e:
+                failed.append(f"{path}: {e}")
+    if failed:
+        warnings.warn(
+            f"_read_files_parallel: {len(failed)} file(s) failed to read: {'; '.join(failed[:5])}{'...' if len(failed) > 5 else ''}",
+            stacklevel=2,
+        )
     return "\n".join(contents)
 
 
