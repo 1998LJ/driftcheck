@@ -4,11 +4,22 @@
 - **62 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
 - **68 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
 - **66 find_*_drift functions** exported from top-level `__init__.py` (plus `to_sarif`); 2 additional internal helpers (`find_env_drift_combined`, `find_rust_drift_multi`)
-- **1105 tests** with >95% code coverage
+- **1113 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
-- `2414515` docs: correct detector counts to 61 modules, 61 registered detectors
+- `0c94d31` fix: populate empty Dockerfile with working container definition
+- `e45e7ce` docs: update MANIFEST.md with current project status
+- `e82f6b4` docs: correct detector count to 62 modules (63 files incl __init__)
+- `a55b0a9` feat: add Dockerfile instruction drift detector (EXPOSE, HEALTHCHECK, WORKDIR, ENTRYPOINT, USER) (#100)
+- `dd4fd70` fix: support single-quoted and Poetry style python version in pyproject.toml
+- `cc076a1` docs: add nine missing detectors to README Checks section
+- `0ae2b6e` fix: add Python manifests to lockfile missing check (#81)
+- `f6e3b50` docs: sync detector counts across all three doc files
+- `28033c5` fix: export all 65 find_* functions in __all__ and sync detector counts
+- `5771b5e` docs: add MANIFEST.md with full detector inventory and README mapping
+- `cdf0883` docs: correct detector module count to 61 (actual files in detectors/)
+- `2414515` docs: correct detector counts to 62 modules, 63 registered detectors
 - `43d2f86` feat: add Nix flake.lock drift detection
 - `f8231a6` docs: correct detector module count to 60 (actual files in detectors/)
 - `348fcb0` docs: correct detector counts to match codebase reality (61 modules, 64 registered)
@@ -19,7 +30,7 @@
 - `4e81515` docs: correct detector counts to match codebase reality (60 modules, 66 registered, 1089 tests)
 
 ## Note on Count
-There are **62 detector module files** in `src/driftcheck/detectors/` (62 Python files including `__init__.py`, which is not a detector module — it just imports them). The README previously said "62 detector modules" (commit `2414515`) but was corrected to **62 detector modules** in commit `2414515` follow-up.
+**62 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-18.
 
 ## Detectors Documented in README "Checks" Section
 All 62 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
