@@ -73,6 +73,91 @@ class TestSarifHelmValues:
         assert "replicaCount" in r["message"]["text"]
 
 
+class TestSarifNewDetectors:
+    """Tests for newly added SARIF rule mappings (issue #145)."""
+
+    def test_env_example_drift(self):
+        result = {
+            "env_example_drifts": [
+                {"file": ".env", "kind": "env_missing_keys",
+                 "detail": "KEY1, KEY2 missing from .env", "keys": ["KEY1", "KEY2"]}
+            ]
+        }
+        sarif = to_sarif(result, version="0.1.40")
+        assert len(sarif["runs"][0]["results"]) == 1
+        r = sarif["runs"][0]["results"][0]
+        assert r["ruleId"] == "env-example-drift"
+        assert ".env" in r["message"]["text"]
+
+    def test_gradle_catalog_drift(self):
+        result = {
+            "gradle_catalog_drifts": [
+                {"type": "gradle_catalog_drift", "file": "libs.versions.toml",
+                 "library": "tokio", "catalog_version": "1.36", "readme_version": "1.30"}
+            ]
+        }
+        sarif = to_sarif(result, version="0.1.40")
+        assert len(sarif["runs"][0]["results"]) == 1
+        r = sarif["runs"][0]["results"][0]
+        assert r["ruleId"] == "gradle-catalog-drift"
+        assert "tokio" in r["message"]["text"]
+        assert "1.30" in r["message"]["text"]
+
+    def test_poetry_drift(self):
+        result = {
+            "poetry_drifts": [
+                {"file": "README.md", "package": "python",
+                 "doc_version": "3.9", "pyproject_version": "3.11"}
+            ]
+        }
+        sarif = to_sarif(result, version="0.1.40")
+        assert len(sarif["runs"][0]["results"]) == 1
+        r = sarif["runs"][0]["results"][0]
+        assert r["ruleId"] == "poetry-version-drift"
+        assert "3.9" in r["message"]["text"]
+        assert "3.11" in r["message"]["text"]
+
+    def test_pre_commit_drift(self):
+        result = {
+            "pre_commit_drifts": [
+                {"file": "README.md", "repo": "pre-commit/pre-commit-hooks",
+                 "doc_version": "4.4.0", "rev": "v4.5.0"}
+            ]
+        }
+        sarif = to_sarif(result, version="0.1.40")
+        assert len(sarif["runs"][0]["results"]) == 1
+        r = sarif["runs"][0]["results"][0]
+        assert r["ruleId"] == "pre-commit-version-drift"
+        assert "pre-commit" in r["message"]["text"]
+
+    def test_renovate_drift(self):
+        result = {
+            "renovate_drifts": [
+                {"file": "renovate.json",
+                 "message": "Could not parse renovate.json",
+                 "drift_key": "renovate_parse_error", "severity": "informational"}
+            ]
+        }
+        sarif = to_sarif(result, version="0.1.40")
+        assert len(sarif["runs"][0]["results"]) == 1
+        r = sarif["runs"][0]["results"][0]
+        assert r["ruleId"] == "renovate-config-drift"
+        assert "parse" in r["message"]["text"]
+
+    def test_typosquat_drift(self):
+        result = {
+            "typosquat_drifts": [
+                {"file": "requirements.txt", "kind": "typosquat_suspect",
+                 "detail": "suspicious dependency 'reqeusts' (possible typosquat of 'requests')"}
+            ]
+        }
+        sarif = to_sarif(result, version="0.1.40")
+        assert len(sarif["runs"][0]["results"]) == 1
+        r = sarif["runs"][0]["results"][0]
+        assert r["ruleId"] == "typosquat-suspect"
+        assert "typosquat" in r["message"]["text"].lower()
+
+
 class TestSarifVersionAuto:
     def test_version_none_uses_package_version(self):
         """When version=None, should auto-detect from package __version__."""

@@ -314,9 +314,44 @@ DRIFT_RULES = {
         "Environment-specific Helm values file (values.prod.yaml) conflicts with default values.yaml",
     ),
     "mise_drifts": (
-        "mise-version-drift",
+        "mise-tool-version-drift",
         "Mise Tool Version Drift",
         "README documentation references a tool version that doesn't match mise.toml",
+    ),
+    "env_example_drifts": (
+        "env-example-drift",
+        "Environment Example Drift",
+        ".env.example keys missing from .env or undocumented extra keys in .env",
+    ),
+    "gradle_catalog_drifts": (
+        "gradle-catalog-drift",
+        "Gradle Version Catalog Drift",
+        "README documentation references a library version that doesn't match gradle/libs.versions.toml",
+    ),
+    "poetry_drifts": (
+        "poetry-version-drift",
+        "Poetry Version Drift",
+        "README documentation references a Python/package version that doesn't match pyproject.toml",
+    ),
+    "pre_commit_drifts": (
+        "pre-commit-version-drift",
+        "Pre-commit Version Drift",
+        "README documentation references a pre-commit hook version that doesn't match .pre-commit-config.yaml",
+    ),
+    "renovate_drifts": (
+        "renovate-config-drift",
+        "Renovate Config Drift",
+        "Renovate configuration issue detected (parse error, invalid format, or missing config)",
+    ),
+    "git_tag_drifts": (
+        "git-tag-version-drift",
+        "Git Tag Version Drift",
+        "README documentation references a version that doesn't match the latest git tag",
+    ),
+    "typosquat_drifts": (
+        "typosquat-suspect",
+        "Typosquat Suspect",
+        "Suspiciously-named dependency detected — possible typosquat of a known package",
     ),
 }
 
@@ -483,6 +518,34 @@ def _drift_message(drift_type: str, d: dict) -> str:
         return f"{key}: {d.get('override_value')} in override vs {d.get('default_value')} in values.yaml"
     elif drift_type == "env_drifts":
         return d.get("detail", "Environment config drift detected")
+    elif drift_type == "env_example_drifts":
+        kind = d.get("kind", "env_example")
+        if kind == "env_missing":
+            return d.get("detail", ".env file missing — copy from .env.example and fill in values")
+        elif kind == "env_missing_keys":
+            return d.get("detail", f"Keys in .env.example missing from .env: {', '.join(d.get('keys', [])[:3])}")
+        elif kind == "env_extra_keys":
+            return d.get("detail", f"Extra keys in .env not documented in .env.example: {', '.join(d.get('keys', [])[:3])}")
+        return d.get("detail", "Environment example drift detected")
+    elif drift_type == "gradle_catalog_drifts":
+        lib = d.get("library", "library")
+        catalog_ver = d.get("catalog_version", "unknown")
+        readme_ver = d.get("readme_version", "unknown")
+        return f"{lib}: README says {readme_ver} but gradle/libs.versions.toml says {catalog_ver}"
+    elif drift_type == "poetry_drifts":
+        pkg = d.get("package", "package")
+        doc_ver = d.get("doc_version", "unknown")
+        pp_ver = d.get("pyproject_version", "unknown")
+        return f"{pkg} {doc_ver} in docs should be {pp_ver} (pyproject.toml)"
+    elif drift_type == "pre_commit_drifts":
+        repo = d.get("repo", "repo")
+        doc_ver = d.get("doc_version", "unknown")
+        rev = d.get("rev", "unknown")
+        return f"pre-commit hook {repo}: docs say {doc_ver} but .pre-commit-config.yaml says {rev}"
+    elif drift_type == "renovate_drifts":
+        return d.get("message", "Renovate configuration issue detected")
+    elif drift_type == "typosquat_drifts":
+        return d.get("detail", "Suspicious dependency name — possible typosquat")
     return str(d)
 
 
@@ -535,9 +598,11 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
         "ruby_version_drifts", "python_version_drifts", "node_version_drifts",
         "java_version_drifts", "terraform_version_drifts",
         "npmrc_drifts", "yarnrc_drifts", "pnpm_workspace_drifts", "package_manager_drifts",
-        "vscode_ext_drifts", "editorconfig_drifts", "taskfile_drifts",
+        "vscode_ext_drifts", "editorconfig_drifts", "taskfile_drifts", "git_tag_drifts",
         "devcontainer_drifts", "compose_override_drifts", "helm_values_drifts",
         "mise_drifts", "bazel_drifts", "nix_drifts",
+        "env_example_drifts", "gradle_catalog_drifts", "poetry_drifts",
+        "pre_commit_drifts", "renovate_drifts", "typosquat_drifts",
     ]
 
     for drift_type in drift_keys:
