@@ -282,6 +282,7 @@ def main(argv=None) -> int:
     ap.add_argument("--dry-run", action="store_true", help="print config to stdout without writing (with --init)")
     ap.add_argument("--git-mode", action="store_true", help="only scan files changed since --git-base (default: HEAD~1)")
     ap.add_argument("--git-base", metavar="COMMIT", default="HEAD~1", help="base commit for --git-mode (default: HEAD~1); validated against strict ref format")
+    ap.add_argument("--max-file-size", type=int, default=None, metavar="BYTES", help="max file size in bytes (default: 1MB from config); larger files are skipped")
     args = ap.parse_args(argv)
 
     if args.list_detectors:
@@ -303,7 +304,7 @@ def main(argv=None) -> int:
         if not args.quiet:
             print(f"driftcheck: git-mode — {len(changed)} file(s) changed, {len(enabled_detectors)} detector(s) relevant")
 
-    result = scan_repo(Path(args.path), enabled_detectors=enabled_detectors)
+    result = scan_repo(Path(args.path), enabled_detectors=enabled_detectors, max_file_size=args.max_file_size)
 
     if args.report:
         _print_report(result)

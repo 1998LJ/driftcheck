@@ -45,6 +45,7 @@ DEFAULT_CONFIG = {
     "doc_paths": None,  # None = auto-detect README.md, CONTRIBUTING.md, docs/README*.md
     "custom_detectors": [],
     "follow_symlinks": True,  # If False, skip symlinks outside repo root during scan
+    "max_file_size": 1_000_000,  # 1MB default — files larger than this are skipped (OOM protection)
 }
 
 
