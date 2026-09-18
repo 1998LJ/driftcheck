@@ -2,7 +2,7 @@
 
 ## Core Stats
 - **63 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
-- **67 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
+- **83 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
 - **64 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`); 2 additional internal helpers (`find_env_drift_combined`, `find_rust_drift_multi`)
 - **1200 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
