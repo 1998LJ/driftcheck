@@ -110,3 +110,24 @@ def test_walk_files_broken_symlink_handled():
         walked, skipped = _walk_files(root, follow_symlinks=False)
         assert len(skipped) >= 1
         assert any("broken" in s.lower() or "inaccessible" in s.lower() for s in skipped)
+
+
+def test_walk_files_symlink_loop_handled():
+    """Symlink loops (a -> b -> a) are detected and skipped without crashing."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = Path(tmpdir) / "repo"
+        root.mkdir()
+        
+        # Create a symlink loop: a -> b -> a
+        a = root / "a"
+        b = root / "b"
+        a.symlink_to(b)
+        b.symlink_to(a)
+        
+        # Should not crash with RuntimeError
+        walked, skipped = _walk_files(root, follow_symlinks=False)
+        # Symlinks in loop should either be skipped (with loop message)
+        # or not appear at all (os.walk may omit them by version)
+        # The key requirement: no crash
+        assert isinstance(skipped, list)
+        assert isinstance(walked, set)

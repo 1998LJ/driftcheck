@@ -47,9 +47,9 @@ def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], li
                         skipped.append(
                             f"Symlink '{fpath.relative_to(root)}' -> '{target}' skipped (outside repo root)"
                         )
-                except OSError:
+                except (OSError, RuntimeError):
                     skipped.append(
-                        f"Symlink '{fpath.relative_to(root)}' skipped (broken or inaccessible)"
+                        f"Symlink '{fpath.relative_to(root)}' skipped (broken, inaccessible, or symlink loop)"
                     )
             else:
                 files.add(fpath)
