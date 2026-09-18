@@ -1,10 +1,10 @@
-# Driftcheck Manifest — v0.1.45
+# Driftcheck Manifest — v0.1.46
 
 ## Core Stats
 - **63 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
 - **67 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
-- **125 find_*_drift functions** exported from top-level `__init__.py` (plus `to_sarif`); 2 additional internal helpers (`find_env_drift_combined`, `find_rust_drift_multi`)
-- **1198 tests** with >95% code coverage
+- **64 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`); 2 additional internal helpers (`find_env_drift_combined`, `find_rust_drift_multi`)
+- **1200 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
@@ -30,7 +30,7 @@
 - `4e81515` docs: correct detector counts to match codebase reality (60 modules, 66 registered, 1089 tests)
 
 ## Note on Count
-**63 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-18.
+**63 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-18 (commit `26eaf0a`).
 
 ## Detectors Documented in README "Checks" Section
 All 63 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
