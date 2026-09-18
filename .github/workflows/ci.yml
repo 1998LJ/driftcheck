@@ -23,7 +23,9 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e . && pip install pytest
+      - run: pip install -e . && pip install pytest ruff mypy
+      - run: ruff check src/driftcheck tests/
+      - run: mypy src/driftcheck/
       - run: pytest -q
       - run: python -m driftcheck --help
 

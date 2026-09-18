@@ -11,21 +11,22 @@ Performance:
     File I/O is parallelized via ThreadPoolExecutor for large repos.
 """
 from __future__ import annotations
+
 import os
-from pathlib import Path
-from typing import Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from .config import load_config, get_excluded_detectors
+from pathlib import Path
+
+from .config import DRIFT_KEYS, get_excluded_detectors, load_config
 from .plugins import load_plugins, run_plugin_detectors
 
 
 def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], list[str]]:
     """Walk directory tree, respecting symlink policy.
-    
+
     Args:
         root: repo root path
         follow_symlinks: if False, skip symlinks pointing outside root
-    
+
     Returns:
         Tuple of (file_paths, skipped_symlinks) where skipped_symlinks are
         human-readable strings describing skipped links for SARIF output.
@@ -33,8 +34,8 @@ def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], li
     files: set[Path] = set()
     skipped: list[str] = []
     root_resolved = root.resolve()
-    
-    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+
+    for dirpath, _dirnames, filenames in os.walk(root, followlinks=False):
         dirpath_path = Path(dirpath)
         for fname in filenames:
             fpath = dirpath_path / fname
@@ -58,7 +59,7 @@ def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], li
 
 def _safe_glob(root: Path, pattern: str, walked_files: set[Path], follow_symlinks: bool = True):
     """Wrap Path.glob to respect symlink policy.
-    
+
     When follow_symlinks is False, only yield files that appear in walked_files
     (i.e., files found by os.walk which skips external symlinks).
     """
@@ -69,11 +70,11 @@ def _safe_glob(root: Path, pattern: str, walked_files: set[Path], follow_symlink
 
 def _read_text_safe(path: Path, max_size: int = 1_000_000) -> str | None:
     """Read text file safely, returning None if too large, binary, or unreadable.
-    
+
     Args:
         path: file path to read
         max_size: maximum file size in bytes (default 1MB)
-    
+
     Returns:
         File contents as string, or None if file doesn't exist, is too large,
         binary content, or unreadable.
@@ -95,120 +96,94 @@ def _read_text_safe(path: Path, max_size: int = 1_000_000) -> str | None:
 
 
 from .detectors import (
-    parse_toolchain_version,
+    apply_fixes,
+    find_actions_node_drift,
+    find_bazel_drift,
+    find_bun_drift,
+    find_ci_os_drift,
+    find_circleci_drift,
+    find_cmake_drift,
+    find_compose_override_drift,
+    find_conda_drift,
+    find_count_drift,
+    find_dart_drift,
+    find_deno_drift,
+    find_dependabot_drift,
+    find_devcontainer_drift,
+    find_docker_compose_drift,
+    find_docker_drift,
+    find_dockerfile_bases_drift,
+    find_dockerfile_instruction_drift,
+    find_dockerfile_multistage_drift,
+    find_dotnet_drift,
+    find_editorconfig_drift,
+    find_elixir_drift,
+    find_engines_drift,
+    find_env_drift,
+    find_env_drift_combined,
+    find_external_resource_drift,
+    find_gh_actions_version_drift,
+    find_git_tag_drift,
+    find_gitlab_drift,
+    find_go_drift,
+    find_gradle_catalog_drift,
+    find_helm_drift,
+    find_helm_values_drift,
+    find_java_drift,
+    find_jenkins_drift,
+    find_k8s_drift,
+    find_kotlin_drift,
+    find_kotlin_multiplatform_drift,
+    find_lineending_drift,
+    find_lockfile_drift,
+    find_makefile_drift,
+    find_maven_drift,
+    find_mise_drift,
+    find_nix_drift,
+    find_node_drift,
+    find_npmrc_drift,
+    find_nvmrc_drift,
+    find_package_manager_drift,
+    find_php_drift,
+    find_pipfile_drift,
+    find_pnpm_workspace_drift,
+    find_poetry_drift,
+    find_pre_commit_drift,
+    find_python_drift,
+    find_python_version_file_drift,
+    find_renovate_drift,
+    find_requirements_drift,
+    find_ruby_drift,
     find_rust_drift,
     find_rust_drift_multi,
-    parse_cargo_rust_version,
-    parse_node_version_from_package,
-    find_node_drift,
-    parse_python_version_from_pyproject,
-    find_python_drift,
-    parse_go_version_from_gomod,
-    find_go_drift,
-    find_docker_drift,
-    find_dockerfile_instruction_drift,
-    find_dockerfile_bases_drift,
-    parse_from_stages,
-    find_dockerfile_multistage_drift,
-    parse_gradle_java_version,
-    find_java_drift,
-    parse_maven_java_version,
-    find_maven_drift,
-    find_terraform_drift,
-    find_circleci_drift,
-    find_gitlab_drift,
-    find_actions_node_drift,
-    find_gh_actions_version_drift,
-    find_k8s_drift,
-    find_helm_drift,
-    find_docker_compose_drift,
-    parse_dotnet_tfm,
-    find_dotnet_drift,
-    parse_gemfile_ruby_version,
-    find_ruby_drift,
-    parse_composer_php_version,
-    find_php_drift,
-    parse_bun_version_from_package,
-    find_bun_drift,
-    find_lineending_drift,
-    find_external_resource_drift,
-    find_count_drift,
-    find_dependabot_drift,
-    find_typosquat_drift,
-    find_ci_os_drift,
-    find_lockfile_drift,
-    find_engines_drift,
-    find_tool_versions_drift,
-    find_nvmrc_drift,
-    parse_deno_version,
-    find_deno_drift,
-    parse_swift_version_from_package,
     find_swift_drift,
-    parse_dart_sdk_version,
-    find_dart_drift,
-    parse_makefile_versions,
-    find_makefile_drift,
-    parse_mix_elixir_version,
-    find_elixir_drift,
-    parse_cmake_version,
-    find_cmake_drift,
-    find_env_drift,
-    find_compose_override_drift,
-    find_helm_values_drift,
-    find_env_drift_combined,
-    find_requirements_drift,
-    parse_poetry_pyproject,
-    find_poetry_drift,
-    parse_kotlin_version,
-    find_kotlin_drift,
-    find_pipfile_drift,
-    find_conda_drift,
-    find_gradle_catalog_drift,
-    find_kotlin_multiplatform_drift,
-    parse_jenkins_node_agent,
-    parse_jenkins_nodejs_version,
-    parse_jenkins_python_version,
-    parse_jenkins_docker_images,
-    find_jenkins_drift,
-    parse_ruby_version,
-    parse_python_version,
-    parse_node_version,
-    parse_java_version,
-    parse_terraform_version,
-    find_version_file_drift,
-    parse_python_version_file,
-    find_python_version_file_drift,
-    apply_fixes,
-    parse_npmrc,
-    find_npmrc_drift,
-    parse_yarnrc_version,
-    find_yarnrc_drift,
-    parse_pnpm_workspace,
-    find_pnpm_workspace_drift,
-    parse_package_manager_field,
-    detect_lockfile_manager,
-    find_package_manager_drift,
-    parse_vscode_extensions,
-    find_vscode_extensions_drift,
-    get_latest_git_tag,
-    find_git_tag_drift,
-    parse_editorconfig,
-    find_editorconfig_drift,
-    find_devcontainer_drift,
     find_taskfile_drift,
-    find_mise_drift,
-    parse_mise_tools,
-    parse_pre_commit_revs,
-    find_pre_commit_drift,
-    find_renovate_drift,
-    find_bazel_drift,
-    find_nix_drift,
+    find_terraform_drift,
+    find_tool_versions_drift,
+    find_typosquat_drift,
+    find_version_file_drift,
+    find_vscode_extensions_drift,
+    find_yarnrc_drift,
+    parse_bun_version_from_package,
+    parse_cargo_rust_version,
+    parse_composer_php_version,
+    parse_dart_sdk_version,
+    parse_deno_version,
+    parse_dotnet_tfm,
+    parse_gemfile_ruby_version,
+    parse_go_version_from_gomod,
+    parse_gradle_java_version,
+    parse_maven_java_version,
+    parse_node_version_from_package,
+    parse_python_version_from_pyproject,
+    parse_swift_version_from_package,
+    parse_toolchain_version,
 )
 
 
 def _read_files_parallel(root: Path, patterns: list[str]) -> str:
     """Read multiple files in parallel using ThreadPoolExecutor.
-    
+
     Returns concatenated file contents separated by newlines.
     """
     files = []
@@ -216,14 +191,14 @@ def _read_files_parallel(root: Path, patterns: list[str]) -> str:
         for p in root.glob(pattern):
             if p.is_file():
                 files.append(p)
-    
+
     if not files:
         return ""
-    
+
     contents = []
     with ThreadPoolExecutor(max_workers=min(8, len(files))) as executor:
         futures = {
-            executor.submit(lambda p=p: _read_text_safe(p, max_size=1_000_000)): p
+            executor.submit(_read_text_safe, p, max_size=1_000_000): p
             for p in files
         }
         for future in as_completed(futures):
@@ -241,7 +216,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
 
     Configuration is loaded from .driftcheck.toml if present.
     File I/O is parallelized via ThreadPoolExecutor for large repos.
-    
+
     Args:
         root: repo root path
         enabled_detectors: if set, only run these detector keys (skip others)
@@ -286,7 +261,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     gomod_text = _read_text_safe(gomod_path, max_size=max_file_size) or ""
     cargo_path = root / "Cargo.toml"
     cargo_text = _read_text_safe(cargo_path, max_size=max_file_size) or ""
-    
+
     # Dockerfiles (respect follow_symlinks policy)
     dockerfiles = {}
     for pattern in ["Dockerfile", "Dockerfile.*", "docker/Dockerfile", "docker/Dockerfile.*"]:
@@ -295,7 +270,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     dockerfiles[str(p.relative_to(root))] = content
-    
+
     # Gradle build files
     gradle_files = {}
     for pattern in ["build.gradle", "build.gradle.kts", "gradle/build.gradle", "gradle/build.gradle.kts"]:
@@ -304,7 +279,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     gradle_files[str(p.relative_to(root))] = content
-    
+
     # Maven pom.xml files
     maven_files = {}
     for pattern in ["pom.xml", "maven/pom.xml"]:
@@ -313,7 +288,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     maven_files[str(p.relative_to(root))] = content
-    
+
     # Terraform files
     terraform_files = {}
     for pattern in ["versions.tf", "*.tf", "terraform/*.tf"]:
@@ -322,7 +297,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     terraform_files[str(p.relative_to(root))] = content
-    
+
     # CircleCI config files
     circleci_files = {}
     for pattern in [".circleci/config.yml", ".circleci/config.yaml"]:
@@ -331,7 +306,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     circleci_files[str(p.relative_to(root))] = content
-    
+
     # GitLab CI config files
     gitlab_files = {}
     for pattern in [".gitlab-ci.yml", ".gitlab-ci.yaml"]:
@@ -340,7 +315,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     gitlab_files[str(p.relative_to(root))] = content
-    
+
     # Kubernetes manifests
     k8s_files = {}
     for pattern in ["k8s/**/*.yaml", "k8s/**/*.yml", "kubernetes/**/*.yaml", "kubernetes/**/*.yml", "deploy/**/*.yaml", "deploy/**/*.yml"]:
@@ -780,7 +755,6 @@ __all__ = [
     "parse_tool_versions",
     "find_tool_versions_drift",
     # NVMRC
-    "parse_nvmrc_version",
     "find_nvmrc_drift",
     # Deno
     "parse_deno_version",

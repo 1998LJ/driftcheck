@@ -6,7 +6,6 @@ GitLab Vulnerability Reports, and any other consumer that speaks SARIF.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
 
@@ -278,11 +277,6 @@ DRIFT_RULES = {
         "EditorConfig Drift",
         ".editorconfig settings conflict with README or IDE settings",
     ),
-    "git_tag_drifts": (
-        "git-tag-drift",
-        "Git Tag Drift",
-        "README version mentions do not match the latest git tag",
-    ),
     "taskfile_drifts": (
         "taskfile-drift",
         "Taskfile Drift",
@@ -436,9 +430,7 @@ def _drift_message(drift_type: str, d: dict) -> str:
         return f"Ruby {d.get('doc_version')} in docs should be {d.get('gemfile_version')}"
     elif drift_type == "php_drifts":
         return f"PHP {d.get('doc_version')} in docs should be {d.get('composer_version')}"
-    elif drift_type == "actions_drifts":
-        return f"Action {d.get('action')}@{d.get('current')} should be updated to {d.get('action')}@{d.get('suggested')}"
-    elif drift_type == "gh_actions_version_drifts":
+    elif drift_type == "actions_drifts" or drift_type == "gh_actions_version_drifts":
         return f"Action {d.get('action')}@{d.get('current')} should be updated to {d.get('action')}@{d.get('suggested')}"
     elif drift_type == "ci_os_drifts":
         return f"Runner {d.get('runner')} is deprecated, use {d.get('suggested')}"
