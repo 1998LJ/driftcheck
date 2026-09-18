@@ -61,10 +61,24 @@ def _safe_glob(root: Path, pattern: str, walked_files: set[Path], follow_symlink
     """Wrap Path.glob to respect symlink policy.
 
     When follow_symlinks is False, only yield files that appear in walked_files
-    (i.e., files found by os.walk which skips external symlinks).
+    (i.e., files found by os.walk which skips external symlinks). Paths that are
+    symlinks pointing outside root are excluded.
     """
+    root_resolved = root.resolve()
     for p in root.glob(pattern):
-        if follow_symlinks or p in walked_files:
+        if follow_symlinks:
+            yield p
+            continue
+        # follow_symlinks is False: check symlink safety
+        if p.is_symlink():
+            try:
+                target = p.resolve()
+                if str(target).startswith(str(root_resolved)):
+                    yield p
+                continue
+            except (OSError, RuntimeError):
+                continue
+        if p in walked_files:
             yield p
 
 
