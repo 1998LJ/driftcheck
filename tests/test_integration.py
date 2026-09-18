@@ -128,7 +128,7 @@ class TestCLIJsonOutput:
         assert rc == 0
         data = json.loads(out)
         assert data["toolchain_version"] == "1.96.1"
-        assert data["drifts"] == []
+        assert data["rust_drifts"] == []
 
     def test_json_with_drift(self, tmp_path):
         (tmp_path / "rust-toolchain.toml").write_text('channel = "1.96.1"')
@@ -137,8 +137,8 @@ class TestCLIJsonOutput:
         assert rc == 1
         data = json.loads(out)
         assert data["toolchain_version"] == "1.96.1"
-        assert len(data["drifts"]) == 1
-        assert data["drifts"][0]["doc_version"] == "1.93.0"
+        assert len(data["rust_drifts"]) == 1
+        assert data["rust_drifts"][0]["doc_version"] == "1.93.0"
 
     def test_json_multiple_detectors(self, tmp_path):
         (tmp_path / "rust-toolchain.toml").write_text('channel = "1.96.1"')
