@@ -45,8 +45,8 @@ class TestLoadConfig:
             )
             config = load_config(root)
             excluded = get_excluded_detectors(config)
-            # "rust" maps to both "drifts" and "rust_drifts"
-            assert excluded == {"drifts", "rust_drifts"}
+            # "rust" maps to "rust_drifts"
+            assert excluded == {"rust_drifts"}
 
     def test_fail_on_informational(self):
         with tempfile.TemporaryDirectory() as td:
@@ -71,7 +71,7 @@ class TestLoadConfig:
                 '[driftcheck]\nexclude_detectors = ["rust"]\n'
             )
             result = scan_repo(root)
-            # drifts should be excluded
-            assert "drifts" not in result
+            # rust_drifts should be excluded (not in result)
+            assert "rust_drifts" not in result
             # node drifts should still be present
             assert "node_drifts" in result
