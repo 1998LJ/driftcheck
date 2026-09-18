@@ -186,4 +186,3 @@ def test_safe_glob_prefix_collision_bypass():
         walked, _ = _walk_files(root, follow_symlinks=False)
         globbed = list(_safe_glob(root, "*", walked, follow_symlinks=False))
         assert symlink not in globbed, "_safe_glob followed prefix-collision symlink"
-
