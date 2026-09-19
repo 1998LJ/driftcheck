@@ -7,7 +7,7 @@ from driftcheck.detector import _walk_files, scan_repo
 
 
 def test_walk_files_respects_follow_symlinks_false():
-    """When follow_symlinks=False, symlinks outside root are skipped (issue #128)."""
+    """Symlinks outside root are NEVER followed (path traversal protection)."""
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir) / "repo"
         root.mkdir()
@@ -29,14 +29,15 @@ def test_walk_files_respects_follow_symlinks_false():
             assert len(skipped) >= 1
             assert any("outside repo root" in s or "skipped" in s.lower() for s in skipped)
 
-            # With follow_symlinks=True (default)
+            # With follow_symlinks=True (default) - STILL skipped for outside root
             walked2, skipped2 = _walk_files(root, follow_symlinks=True)
-            assert symlink_path in walked2
-            assert len(skipped2) == 0
+            assert symlink_path not in walked2
+            assert len(skipped2) >= 1
+            assert any("outside repo root" in s for s in skipped2)
 
 
-def test_walk_files_internal_symlink_always_included():
-    """Symlinks pointing inside root are always included."""
+def test_walk_files_internal_symlink_follows_flag():
+    """Internal symlinks follow the follow_symlinks flag."""
     with tempfile.TemporaryDirectory() as tmpdir:
         root = Path(tmpdir) / "repo"
         root.mkdir()
@@ -55,10 +56,16 @@ def test_walk_files_internal_symlink_always_included():
         symlink = sub2 / "link.txt"
         symlink.symlink_to(real_file)
 
-        # With follow_symlinks=False, internal symlinks are still included
-        walked, skipped = _walk_files(root, follow_symlinks=False)
+        # With follow_symlinks=True, internal symlinks are included
+        walked, skipped = _walk_files(root, follow_symlinks=True)
         assert symlink in walked
         assert len(skipped) == 0
+
+        # With follow_symlinks=False, internal symlinks are skipped
+        walked2, skipped2 = _walk_files(root, follow_symlinks=False)
+        assert symlink not in walked2
+        assert len(skipped2) >= 1
+        assert any("follow_symlinks=False" in s for s in skipped2)
 
 
 def test_scan_repo_follow_symlinks_false_skips_external():

@@ -24,9 +24,12 @@ from .plugins import load_plugins, run_plugin_detectors
 def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], list[str]]:
     """Walk directory tree, respecting symlink policy.
 
+    Symlinks pointing outside the repo root are NEVER followed, regardless
+    of follow_symlinks setting. This prevents path traversal attacks.
+
     Args:
         root: repo root path
-        follow_symlinks: if False, skip symlinks pointing outside root
+        follow_symlinks: if False, skip all symlinks
 
     Returns:
         Tuple of (file_paths, skipped_symlinks) where skipped_symlinks are
@@ -43,11 +46,17 @@ def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], li
             if fpath.is_symlink():
                 try:
                     target = fpath.resolve()
-                    if follow_symlinks or str(target).startswith(str(root_resolved)):
+                    # Never follow symlinks outside repo root
+                    if not str(target).startswith(str(root_resolved)):
+                        skipped.append(
+                            f"Symlink '{fpath.relative_to(root)}' skipped (outside repo root)"
+                        )
+                        continue
+                    if follow_symlinks:
                         files.add(fpath)
                     else:
                         skipped.append(
-                            f"Symlink '{fpath.relative_to(root)}' skipped (outside repo root)"
+                            f"Symlink '{fpath.relative_to(root)}' skipped (follow_symlinks=False)"
                         )
                 except (OSError, RuntimeError):
                     skipped.append(
