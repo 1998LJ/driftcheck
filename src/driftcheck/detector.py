@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import warnings
 
-from .config import DRIFT_KEYS, get_excluded_detectors, load_config
+from .config import DRIFT_KEYS, get_excluded_detectors, load_config, get_ignore_patterns, _matches_ignore_patterns
 from .plugins import load_plugins, run_plugin_detectors
 
 
@@ -262,6 +262,11 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
 
     # Walk files with symlink policy (issue #128)
     walked_files, skipped_symlinks = _walk_files(root, follow_symlinks=follow_symlinks)
+
+    # Apply ignore_patterns to filter files before detector runs
+    ignore_patterns = get_ignore_patterns(config)
+    if ignore_patterns:
+        walked_files = {p for p in walked_files if not _matches_ignore_patterns(str(p.relative_to(root)), ignore_patterns)}
 
     # Filter detectors if git-mode is active
     if enabled_detectors is not None:
