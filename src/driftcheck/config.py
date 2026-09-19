@@ -59,7 +59,7 @@ def _parse_toml(text: str) -> dict[str, Any]:
     return tomllib.loads(text)
 
 
-def _coerce_bool(value: Any, default: bool) -> bool:
+def _coerce_bool(value: Any, default: Any) -> bool:
     """Coerce string/boolean/int to boolean.
 
     TOML's tomllib strictly types values — a user writing
