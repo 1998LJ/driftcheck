@@ -54,6 +54,7 @@ from .detectors.renovate import find_renovate_drift
 from .detectors.requirements import find_requirements_drift
 from .detectors.ruby import find_ruby_drift
 from .detectors.rust import find_rust_drift
+from .detectors.rust_workspace import find_rust_workspace_drift
 from .detectors.swift import find_swift_drift
 from .detectors.taskfile import find_taskfile_drift
 from .detectors.terraform import find_terraform_drift
@@ -122,6 +123,7 @@ __all__ = [
     "find_requirements_drift",
     "find_ruby_drift",
     "find_rust_drift",
+    "find_rust_workspace_drift",
     "find_swift_drift",
     "find_taskfile_drift",
     "find_terraform_drift",

@@ -19,6 +19,7 @@ import warnings
 
 from .config import DRIFT_KEYS, get_excluded_detectors, load_config, get_ignore_patterns, _matches_ignore_patterns
 from .plugins import load_plugins, run_plugin_detectors
+from .detectors.rust_workspace import find_rust_workspace_drift
 
 
 def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], list[str]]:
@@ -425,6 +426,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     pubspec_text = "\n".join(pubspec_files.values()) if pubspec_files else ""
 
     rust_drifts_multi = find_rust_drift_multi(toolchain_text, cargo_text, docs)
+    rust_workspace_drifts = find_rust_workspace_drift(root)
     node_drifts = find_node_drift(package_text, docs)
     bun_drifts = find_bun_drift(package_text, docs)
     python_drifts = find_python_drift(pyproject_text, docs)
@@ -632,6 +634,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
         "pyproject_python": parse_python_version_from_pyproject(pyproject_text),
         "gomod_version": parse_go_version_from_gomod(gomod_text),
         "rust_drifts": rust_drifts_multi,
+        "rust_workspace_drifts": rust_workspace_drifts,
         "node_drifts": node_drifts,
         "bun_drifts": bun_drifts,
         "python_drifts": python_drifts,
