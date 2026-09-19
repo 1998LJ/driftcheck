@@ -59,6 +59,26 @@ def _parse_toml(text: str) -> dict[str, Any]:
     return tomllib.loads(text)
 
 
+def _coerce_bool(value: Any, default: bool) -> bool:
+    """Coerce string/boolean/int to boolean.
+
+    TOML's tomllib strictly types values — a user writing
+    ``follow_symlinks = "false"`` (quoted) gets a *string* "false",
+    which is truthy in Python. This helper normalizes common
+    truthy/falsy strings so config intent is preserved.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        if value.lower() in ("false", "no", "0", ""):
+            return False
+        if value.lower() in ("true", "yes", "1"):
+            return True
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return default
+
+
 def load_config(root: Path = Path(".")) -> dict[str, Any]:
     """Load .driftcheck.toml from repo root, return merged config."""
     cfg = dict(DEFAULT_CONFIG)
@@ -73,6 +93,8 @@ def load_config(root: Path = Path(".")) -> dict[str, Any]:
         for k, v in raw.items():
             if k != "driftcheck" and k not in cfg:
                 cfg[k] = v
+    # Coerce follow_symlinks so string "false" doesn't become True
+    cfg["follow_symlinks"] = _coerce_bool(cfg.get("follow_symlinks"), DEFAULT_CONFIG["follow_symlinks"])
     return cfg
 
 
@@ -95,3 +117,24 @@ def get_excluded_detectors(config: dict[str, Any]) -> set[str]:
 def get_custom_detectors(config: dict[str, Any]) -> list[dict[str, Any]]:
     """Get list of custom detector definitions from config."""
     return config.get("custom_detectors", [])
+
+
+def get_ignore_patterns(config: dict[str, Any]) -> list[str]:
+    """Get list of file glob patterns to ignore during scanning.
+
+    Patterns use fnmatch syntax (e.g., ``*.log``, ``node_modules/*``, ``docs/**/*.md``).
+    Files matching any pattern are excluded from walked_files before detectors run.
+    """
+    return config.get("ignore_patterns", [])
+
+
+def _matches_ignore_patterns(rel_path: str, patterns: list[str]) -> bool:
+    """Check if a relative path matches any ignore pattern (fnmatch syntax)."""
+    import fnmatch
+    for pattern in patterns:
+        if fnmatch.fnmatch(rel_path, pattern):
+            return True
+        # Also match against basename for simple patterns
+        if fnmatch.fnmatch(Path(rel_path).name, pattern):
+            return True
+    return False
