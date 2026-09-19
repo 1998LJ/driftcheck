@@ -546,13 +546,45 @@ def _make_relative_path(file: str, root: Path | None) -> str:
 
     Absolute paths can leak usernames and internal directory structure
     in public CI logs and GitHub Code Scanning uploads.
+
+    Drift entries store file paths relative to the scanned directory.
+    When root is provided, prefix with {repoRoot}/ for SARIF consumers
+    to resolve via originalUriBaseIds.
     """
     if root is None:
         return file
-    try:
-        return str(Path(file).relative_to(root))
-    except ValueError:
-        return Path(file).name  # fallback to basename
+    # Path is already relative (drift entries store relative paths).
+    # Only strip root prefix if the path happens to be absolute.
+    p = Path(file)
+    if p.is_absolute():
+        try:
+            rel = str(p.relative_to(root))
+        except ValueError:
+            rel = p.name
+    else:
+        rel = file
+    return f"{{repoRoot}}/{rel}"
+
+
+def _build_original_uri_base_ids(root: Path | None) -> dict | None:
+    """Build SARIF originalUriBaseIds dict from root path.
+
+    When root is provided, returns a dict with a single "repoRoot" entry.
+    Uses a relative URI (".") to avoid leaking absolute local paths
+    (which may contain usernames) in public CI logs or SARIF artifacts.
+
+    SARIF consumers resolve {repoRoot}/README.md against this URI.
+    Returns None when root is None (absolute_paths mode) — in that case,
+    the caller should not emit originalUriBaseIds.
+    """
+    if root is None:
+        return None
+    return {
+        "repoRoot": {
+            "uri": "./",
+            "description": {"text": "Root directory scanned by driftcheck"},
+        }
+    }
 
 
 def to_sarif(result: dict, version: str | None = None, root: Path | None = None) -> dict:
@@ -644,20 +676,23 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
                 "suppressions": [{"kind": "inSource", "justification": "follow_symlinks=false policy"}],
             })
 
+    original_uri_base_ids = _build_original_uri_base_ids(root)
+    run: dict = {
+        "tool": {
+            "driver": {
+                "name": "driftcheck",
+                "version": version,
+                "informationUri": "https://github.com/yunaremaia/driftcheck",
+                "rules": rules,
+            }
+        },
+        "results": results,
+    }
+    if original_uri_base_ids is not None:
+        run["originalUriBaseIds"] = original_uri_base_ids
+
     return {
         "$schema": SARIF_SCHEMA,
         "version": "2.1.0",
-        "runs": [
-            {
-                "tool": {
-                    "driver": {
-                        "name": "driftcheck",
-                        "version": version,
-                        "informationUri": "https://github.com/yunaremaia/driftcheck",
-                        "rules": rules,
-                    }
-                },
-                "results": results,
-            }
-        ],
+        "runs": [run],
     }
