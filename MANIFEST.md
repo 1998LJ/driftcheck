@@ -1,13 +1,14 @@
 # Driftcheck Manifest — v0.1.46
 
 ## Core Stats
-- **63 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
-- **67 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
-- **64 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`); 2 additional internal helpers (`find_env_drift_combined`, `find_rust_drift_multi`)
-- **1204 tests** with >95% code coverage
+- **64 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
+- **68 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
+- **65 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`)
+- **1246 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
+- `c3100f5` Merge PR #203: feat(sarif): add originalUriBaseIds for GitHub Code Scanning file links (fixes #193)
 - `17c5eeb` Merge PR #179: fix(detector): log file read failures in _read_files_parallel (closes #178)
 - `fe85a32` fix(detector): log file read failures in _read_files_parallel (closes #178)
 - `e95f830` fix: resolve all ruff linting errors (183 → 0) to fix PR #160 CI (#165)
@@ -22,10 +23,10 @@
 - `ef24f7f` Merge PR #138 from yunaremaia/fix/sarif-absolute-paths-leak
 
 ## Note on Count
-**63 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-19 (commit `17c5eeb`).
+**64 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-19 (commit `c3100f5`).
 
 ## Detectors Documented in README "Checks" Section
-All 63 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
+All 64 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
 
 | File | README Display Name |
 |------|---------------------|
@@ -45,9 +46,9 @@ All 63 detector modules are documented in the README "Checks" section, though so
 | `docker.py` | Docker |
 | `docker_bases.py` | (part of Docker) |
 | `docker_multistage.py` | (part of Docker) |
-| `dockerfile_instructions.py` | (part of Dockerfile) |
+| `dockerfile_instructions.py` | Dockerfile Instructions |
 | `dotnet.py` | .NET/C# |
-| `editorconfig.py` | (Configuration) |
+| `editorconfig.py` | EditorConfig |
 | `elixir.py` | Elixir |
 | `engines.py` | (part of Node) |
 | `env_drift.py` | Environment drift |
@@ -76,20 +77,20 @@ All 63 detector modules are documented in the README "Checks" section, though so
 | `php.py` | PHP |
 | `pipfile.py` | Pipfile |
 | `pnpm.py` | PNPM workspace |
-| `poetry.py` | (part of Python) |
+| `poetry.py` | Poetry |
 | `pre_commit.py` | Pre-commit |
 | `python.py` | Python |
-| `python_version.py` | (part of Python) |
+| `python_version.py` | Python Version Files |
 | `renovate.py` | Renovate |
 | `requirements.py` | (part of Python) |
 | `ruby.py` | Ruby |
 | `rust.py` | Rust |
+| `rust_workspace.py` | (part of Rust) |
 | `swift.py` | Swift |
-| `taskfile.py` | (Configuration) |
+| `taskfile.py` | Taskfile |
 | `terraform.py` | Terraform |
 | `tool_versions.py` | Tool versions |
-| `typosquat.py` | (Security) |
-| `version_files.py` | Version files |
-| `vscode.py` | (Configuration) |
+| `typosquat.py` | Typosquat Detection |
+| `version_files.py` | Version Files |
+| `vscode.py` | VSCode Extensions |
 | `yarnrc.py` | Yarn RC |
-
