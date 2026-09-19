@@ -36,6 +36,7 @@ DRIFT_KEYS = [
     "renovate_drifts",
     "bazel_drifts",
     "nix_drifts",
+    "rust_workspace_drifts",
 ]
 
 # Default configuration
