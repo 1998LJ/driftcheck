@@ -1,7 +1,7 @@
-import sys
 """driftcheck CLI."""
 from __future__ import annotations
 import argparse
+import sys
 import csv
 import json
 import io

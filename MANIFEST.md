@@ -2,35 +2,27 @@
 
 ## Core Stats
 - **63 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
-- **83 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
+- **67 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
 - **64 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`); 2 additional internal helpers (`find_env_drift_combined`, `find_rust_drift_multi`)
-- **1200 tests** with >95% code coverage
+- **1204 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
-- `0c94d31` fix: populate empty Dockerfile with working container definition
-- `e45e7ce` docs: update MANIFEST.md with current project status
-- `e82f6b4` docs: correct detector count to 62 modules (63 files incl __init__)
-- `a55b0a9` feat: add Dockerfile instruction drift detector (EXPOSE, HEALTHCHECK, WORKDIR, ENTRYPOINT, USER) (#100)
-- `dd4fd70` fix: support single-quoted and Poetry style python version in pyproject.toml
-- `cc076a1` docs: add nine missing detectors to README Checks section
-- `0ae2b6e` fix: add Python manifests to lockfile missing check (#81)
-- `f6e3b50` docs: sync detector counts across all three doc files
-- `28033c5` fix: export all 65 find_* functions in __all__ and sync detector counts
-- `5771b5e` docs: add MANIFEST.md with full detector inventory and README mapping
-- `cdf0883` docs: correct detector module count to 61 (actual files in detectors/)
-- `2414515` docs: correct detector counts to 62 modules, 63 registered detectors
-- `43d2f86` feat: add Nix flake.lock drift detection
-- `f8231a6` docs: correct detector module count to 60 (actual files in detectors/)
-- `348fcb0` docs: correct detector counts to match codebase reality (61 modules, 64 registered)
-- `9d9d644` docs: update detector counts after Bazel detector merge (60 modules, 64 registered)
-- `9caabbf` feat: add Bazel drift detection (#73)
-- `b3544a5` docs: correct detector counts to match codebase reality (59 modules, 63 registered)
-- `31bca51` docs: add devcontainer and renovate detectors to README Checks section
-- `4e81515` docs: correct detector counts to match codebase reality (60 modules, 66 registered, 1089 tests)
+- `17c5eeb` Merge PR #179: fix(detector): log file read failures in _read_files_parallel (closes #178)
+- `fe85a32` fix(detector): log file read failures in _read_files_parallel (closes #178)
+- `e95f830` fix: resolve all ruff linting errors (183 → 0) to fix PR #160 CI (#165)
+- `a845826` docs: correct registered detector count from 67 to 83
+- `1750b51` docs: correct MANIFEST.md counts (v0.1.46, 64 find_* funcs, 1200 tests)
+- `e56dacb` fix(sarif): replace stale 0.1.40 fallback with 'unknown' (fixes #162) (#166)
+- `6736634` fix: replace hand-rolled TOML parser with tomllib (fixes #151) (#157)
+- `dffd414` refactor: remove legacy "drifts" alias and dead _read_files_parallel (fixes #146, #147)
+- `c625cef` fix(sarif): add rule metadata for 7 newer detectors (fixes #145)
+- `e56dacb` feat: add max_file_size OOM protection (fixes #150) (#153)
+- `578e826` feat: add driftcheck init subcommand with auto-detection (fixes #134) (#142)
+- `ef24f7f` Merge PR #138 from yunaremaia/fix/sarif-absolute-paths-leak
 
 ## Note on Count
-**63 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-18 (commit `26eaf0a`).
+**63 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-19 (commit `17c5eeb`).
 
 ## Detectors Documented in README "Checks" Section
 All 63 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
