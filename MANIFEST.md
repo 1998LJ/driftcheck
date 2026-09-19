@@ -45,6 +45,7 @@ All 63 detector modules are documented in the README "Checks" section, though so
 | `docker.py` | Docker |
 | `docker_bases.py` | (part of Docker) |
 | `docker_multistage.py` | (part of Docker) |
+| `dockerfile_instructions.py` | (part of Dockerfile) |
 | `dotnet.py` | .NET/C# |
 | `editorconfig.py` | (Configuration) |
 | `elixir.py` | Elixir |
@@ -61,6 +62,7 @@ All 63 detector modules are documented in the README "Checks" section, though so
 | `jenkins.py` | Jenkins |
 | `k8s.py` | Kubernetes |
 | `kotlin.py` | Kotlin |
+| `kotlin_multiplatform.py` | Kotlin Multiplatform |
 | `lineending.py` | Line endings |
 | `lockfile.py` | Lockfile |
 | `makefile.py` | Makefile |
