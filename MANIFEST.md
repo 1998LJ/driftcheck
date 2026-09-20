@@ -1,7 +1,7 @@
 # Driftcheck Manifest — v0.1.46
 
 ## Core Stats
-- **65 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
+- **64 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
 - **68 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
 - **65 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`)
 - **1310 tests** with >95% code coverage
