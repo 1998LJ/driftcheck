@@ -80,13 +80,89 @@ def _coerce_bool(value: Any, default: Any) -> bool:
     return default
 
 
-def load_config(root: Path = Path(".")) -> dict[str, Any]:
-    """Load .driftcheck.toml from repo root, return merged config."""
+def validate_config(raw: dict[str, Any], strict: bool = False) -> list[str]:
+    """Validate config keys and value types against the known schema.
+
+    Args:
+        raw: Parsed TOML dict (either top-level or from [driftcheck] section).
+        strict: If True, raise ConfigValidationError on unknown keys.
+               If False, return warnings for unknown keys.
+
+    Returns:
+        List of warning messages (empty if valid).
+
+    Raises:
+        ConfigValidationError: If strict=True and unknown keys are found.
+    """
+    warnings = []
+    # Known config keys
+    valid_keys = set(DEFAULT_CONFIG.keys()) | {"driftcheck"}
+
+    # Validate [driftcheck] section keys too
+    sections_to_validate = [raw]
+    if "driftcheck" in raw and isinstance(raw["driftcheck"], dict):
+        sections_to_validate.append(raw["driftcheck"])
+
+    for section in sections_to_validate:
+        for key in section:
+            if key not in valid_keys:
+                msg = f"Unknown config key: {key!r} (valid keys: {sorted(valid_keys)})"
+                if strict:
+                    raise ConfigValidationError(msg)
+                warnings.append(msg)
+
+        # Type validation for known keys
+        bool_keys = {"fail_on_informational", "follow_symlinks"}
+        int_keys = {"max_file_size"}
+        list_keys = {"exclude_detectors", "ignore_patterns", "custom_detectors"}
+
+        for key in bool_keys & set(section):
+            if not isinstance(section[key], (bool, str, int)):
+                msg = f"Invalid type for {key!r}: expected bool, got {type(section[key]).__name__}"
+                if strict:
+                    raise ConfigValidationError(msg)
+                warnings.append(msg)
+
+        for key in int_keys & set(section):
+            if not isinstance(section[key], int):
+                msg = f"Invalid type for {key!r}: expected int, got {type(section[key]).__name__}"
+                if strict:
+                    raise ConfigValidationError(msg)
+                warnings.append(msg)
+
+        for key in list_keys & set(section):
+            if section[key] is not None and not isinstance(section[key], list):
+                msg = f"Invalid type for {key!r}: expected list, got {type(section[key]).__name__}"
+                if strict:
+                    raise ConfigValidationError(msg)
+                warnings.append(msg)
+
+    return warnings
+
+
+class ConfigValidationError(Exception):
+    """Raised when config validation fails in strict mode."""
+    pass
+
+
+def load_config(root: Path = Path("."), strict: bool = False) -> dict[str, Any]:
+    """Load .driftcheck.toml from repo root, return merged config.
+
+    Args:
+        root: Repo root path.
+        strict: If True, raise ConfigValidationError on unknown keys.
+               If False, print warnings to stderr for unknown keys.
+    """
     cfg = dict(DEFAULT_CONFIG)
     toml_path = root / ".driftcheck.toml"
     if toml_path.exists():
         text = toml_path.read_text(encoding="utf-8")
         raw = _parse_toml(text)
+        # Validate raw config
+        warnings = validate_config(raw, strict=strict)
+        if warnings and not strict:
+            for w in warnings:
+                print(f"WARNING: {w}", file=sys.stderr)
         # Flatten: [driftcheck] section takes top-level precedence
         if "driftcheck" in raw:
             for k, v in raw["driftcheck"].items():
