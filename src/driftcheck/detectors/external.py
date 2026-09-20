@@ -50,6 +50,7 @@ def find_external_resource_drift(root: Path) -> list[dict]:
                     f"third-party host, breaks offline rendering"
                 ),
             })
+            # report all external CDNs per file, not just the first
 
     return drifts
 
