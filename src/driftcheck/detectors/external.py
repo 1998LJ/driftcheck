@@ -50,7 +50,6 @@ def find_external_resource_drift(root: Path) -> list[dict]:
                     f"third-party host, breaks offline rendering"
                 ),
             })
-            break  # one per file
 
     return drifts
 

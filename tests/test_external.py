@@ -107,7 +107,7 @@ class TestFindExternalResourceDrift:
         assert len(drifts) == 1
         assert drifts[0]["host"] == "cdnjs.cloudflare.com"
 
-    def test_one_drift_per_file(self, tmp_path):
+    def test_multiple_cdns_per_file(self, tmp_path):
         html = """<!DOCTYPE html>
 <html>
 <head>
@@ -118,7 +118,9 @@ class TestFindExternalResourceDrift:
 </html>"""
         root = self._make_root(tmp_path, html)
         drifts = find_external_resource_drift(root)
-        assert len(drifts) == 1  # one per file
+        assert len(drifts) == 2  # all CDNs per file
+        assert drifts[0]["host"] == "fonts.googleapis.com"
+        assert drifts[1]["host"] == "cdn.jsdelivr.net"
 
     def test_empty_html(self, tmp_path):
         root = self._make_root(tmp_path, "")
