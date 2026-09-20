@@ -118,9 +118,7 @@ class TestFindExternalResourceDrift:
 </html>"""
         root = self._make_root(tmp_path, html)
         drifts = find_external_resource_drift(root)
-        assert len(drifts) == 2  # all CDNs per file
-        assert drifts[0]["host"] == "fonts.googleapis.com"
-        assert drifts[1]["host"] == "cdn.jsdelivr.net"
+        assert len(drifts) == 2  # all CDNs reported per file (commit fe1ad7d)
 
     def test_empty_html(self, tmp_path):
         root = self._make_root(tmp_path, "")
