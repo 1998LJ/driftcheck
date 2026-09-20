@@ -4,7 +4,7 @@
 - **64 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
 - **68 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
 - **65 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`)
-- **1276 tests** with >95% code coverage
+- **1284 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
@@ -13,7 +13,7 @@
 - `fe85a32` fix(detector): log file read failures in _read_files_parallel (closes #178)
 - `e95f830` fix: resolve all ruff linting errors (183 → 0) to fix PR #160 CI (#165)
 - `a845826` docs: correct registered detector count from 67 to 83
-- `1750b51` docs: correct MANIFEST.md counts (v0.1.46, 64 find_* funcs, 1200 tests)
+- `1750b51` docs: correct MANIFEST.md counts (v0.1.46, 64 find_* funcs, 1284 tests)
 - `e56dacb` fix(sarif): replace stale 0.1.40 fallback with 'unknown' (fixes #162) (#166)
 - `6736634` fix: replace hand-rolled TOML parser with tomllib (fixes #151) (#157)
 - `dffd414` refactor: remove legacy "drifts" alias and dead _read_files_parallel (fixes #146, #147)
