@@ -4,29 +4,26 @@
 - **64 detector modules** (files in `src/driftcheck/detectors/` excluding `__init__.py`)
 - **68 registered detectors** (DRIFT_KEYS in `src/driftcheck/config.py`)
 - **65 find_* functions** exported from top-level `__init__.py` (plus `to_sarif`)
-- **1310 tests** with >95% code coverage
+- **1312 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 
 ## Recent Commits
-- `c3100f5` Merge PR #203: feat(sarif): add originalUriBaseIds for GitHub Code Scanning file links (fixes #193)
-- `17c5eeb` Merge PR #179: fix(detector): log file read failures in _read_files_parallel (closes #178)
-- `fe85a32` fix(detector): log file read failures in _read_files_parallel (closes #178)
-- `e95f830` fix: resolve all ruff linting errors (183 → 0) to fix PR #160 CI (#165)
-- `a845826` docs: correct registered detector count from 67 to 83
-- `1750b51` docs: correct MANIFEST.md counts (v0.1.46, 64 find_* funcs, 1284 tests)
-- `e56dacb` fix(sarif): replace stale 0.1.40 fallback with 'unknown' (fixes #162) (#166)
-- `6736634` fix: replace hand-rolled TOML parser with tomllib (fixes #151) (#157)
-- `dffd414` refactor: remove legacy "drifts" alias and dead _read_files_parallel (fixes #146, #147)
-- `c625cef` fix(sarif): add rule metadata for 7 newer detectors (fixes #145)
-- `e56dacb` feat: add max_file_size OOM protection (fixes #150) (#153)
-- `578e826` feat: add driftcheck init subcommand with auto-detection (fixes #134) (#142)
-- `ef24f7f` Merge PR #138 from yunaremaia/fix/sarif-absolute-paths-leak
+- `73a6829` fix: handle symlink loops in _walk_files
+- `070dccc` fix: replace hand-rolled TOML parser with tomllib (fixes #151) (#264)
+- `6f6eeeb` fix: wire custom_detectors config into scan_repo (fixes #209) (#245)
+- `efd7789` docs: update test count from 1284 to 1308 in MANIFEST.md
+- `9271761` fix(test): remove duplicate dict keys flagged by ruff F601
+- `b51b195` docs: correct detector module count from 61 to 64
+- `7fe043e` feat: make parallel read timeouts configurable (#238) (#242)
+- `5742839` docs: correct test count from 1276 to 1284 in MANIFEST.md
+- `192c26b` fix: _print_blocking_drifts now handles all drift types (fixes #233) (#237)
+- `22dd24f` fix(sarif): URI-encode file paths in artifactLocation.uri (#230)
 
 ## Note on Count
-**65 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-19 (commit `c3100f5`).
+**64 detector module files** in `src/driftcheck/detectors/` (excluding `__init__.py`, which is the package init). All counts verified against the codebase on 2026-09-20 (commit `73a6829`).
 
 ## Detectors Documented in README "Checks" Section
-All 65 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
+All 64 detector modules are documented in the README "Checks" section, though some use display names that differ from the file names:
 
 | File | README Display Name |
 |------|---------------------|

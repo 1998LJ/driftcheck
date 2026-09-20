@@ -319,11 +319,9 @@ from .pre_commit import (
 from .fix import apply_fixes
 from .typosquat import find_typosquat_drift
 from .renovate import find_renovate_drift
-from .rust_workspace import find_rust_workspace_drift
 
 __all__ = [
     # Rust
-    "find_rust_workspace_drift",
     "parse_toolchain_version",
     "find_rust_drift",
     "find_rust_drift_multi",

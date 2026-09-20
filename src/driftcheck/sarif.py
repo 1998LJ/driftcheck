@@ -6,18 +6,9 @@ GitLab Vulnerability Reports, and any other consumer that speaks SARIF.
 from __future__ import annotations
 
 from pathlib import Path
-from urllib.parse import quote
+from typing import Any
 
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
-
-
-def _uri_escape_path(path: str) -> str:
-    """URI-encode a file path, preserving path separators.
-
-    Spaces, '#', '?', and non-ASCII characters are percent-encoded
-    so that SARIF artifactLocation URIs are valid per RFC 3986.
-    """
-    return quote(path, safe="/")
 
 # Drift type metadata: (rule_id, rule_name, rule_description)
 DRIFT_RULES = {
@@ -287,6 +278,11 @@ DRIFT_RULES = {
         "EditorConfig Drift",
         ".editorconfig settings conflict with README or IDE settings",
     ),
+    "git_tag_drifts": (
+        "git-tag-drift",
+        "Git Tag Drift",
+        "README version mentions do not match the latest git tag",
+    ),
     "taskfile_drifts": (
         "taskfile-drift",
         "Taskfile Drift",
@@ -440,7 +436,9 @@ def _drift_message(drift_type: str, d: dict) -> str:
         return f"Ruby {d.get('doc_version')} in docs should be {d.get('gemfile_version')}"
     elif drift_type == "php_drifts":
         return f"PHP {d.get('doc_version')} in docs should be {d.get('composer_version')}"
-    elif drift_type == "actions_drifts" or drift_type == "gh_actions_version_drifts":
+    elif drift_type == "actions_drifts":
+        return f"Action {d.get('action')}@{d.get('current')} should be updated to {d.get('action')}@{d.get('suggested')}"
+    elif drift_type == "gh_actions_version_drifts":
         return f"Action {d.get('action')}@{d.get('current')} should be updated to {d.get('action')}@{d.get('suggested')}"
     elif drift_type == "ci_os_drifts":
         return f"Runner {d.get('runner')} is deprecated, use {d.get('suggested')}"
@@ -556,51 +554,13 @@ def _make_relative_path(file: str, root: Path | None) -> str:
 
     Absolute paths can leak usernames and internal directory structure
     in public CI logs and GitHub Code Scanning uploads.
-
-    Drift entries store file paths relative to the scanned directory.
-    When root is provided, prefix with {repoRoot}/ for SARIF consumers
-    to resolve via originalUriBaseIds.
-
-    Path components are URI-encoded (preserving path separators) so that
-    SARIF artifactLocation URIs are valid per RFC 3986 even for paths with
-    spaces, '#', '?' or non-ASCII characters.
     """
     if root is None:
-        return _uri_escape_path(file)
-    # Path is already relative (drift entries store relative paths).
-    # Only strip root prefix if the path happens to be absolute.
-    p = Path(file)
-    if p.is_absolute():
-        try:
-            rel = str(p.relative_to(root))
-        except ValueError:
-            rel = p.name
-    else:
-        rel = file
-    # URI-encode only the path part, not the {repoRoot} variable reference
-    # (SARIF consumers substitute {repoRoot} via originalUriBaseIds).
-    return "{repoRoot}/" + _uri_escape_path(rel)
-
-
-def _build_original_uri_base_ids(root: Path | None) -> dict | None:
-    """Build SARIF originalUriBaseIds dict from root path.
-
-    When root is provided, returns a dict with a single "repoRoot" entry.
-    Uses a relative URI (".") to avoid leaking absolute local paths
-    (which may contain usernames) in public CI logs or SARIF artifacts.
-
-    SARIF consumers resolve {repoRoot}/README.md against this URI.
-    Returns None when root is None (absolute_paths mode) — in that case,
-    the caller should not emit originalUriBaseIds.
-    """
-    if root is None:
-        return None
-    return {
-        "repoRoot": {
-            "uri": "./",
-            "description": {"text": "Root directory scanned by driftcheck"},
-        }
-    }
+        return file
+    try:
+        return str(Path(file).relative_to(root))
+    except ValueError:
+        return Path(file).name  # fallback to basename
 
 
 def to_sarif(result: dict, version: str | None = None, root: Path | None = None) -> dict:
@@ -616,7 +576,7 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
         try:
             from . import __version__ as version
         except ImportError:
-            version = "unknown"
+            version = "0.1.40"
     rules: list[dict] = []
     results: list[dict] = []
     rule_set: set[str] = set()
@@ -692,23 +652,20 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
                 "suppressions": [{"kind": "inSource", "justification": "follow_symlinks=false policy"}],
             })
 
-    original_uri_base_ids = _build_original_uri_base_ids(root)
-    run: dict = {
-        "tool": {
-            "driver": {
-                "name": "driftcheck",
-                "version": version,
-                "informationUri": "https://github.com/yunaremaia/driftcheck",
-                "rules": rules,
-            }
-        },
-        "results": results,
-    }
-    if original_uri_base_ids is not None:
-        run["originalUriBaseIds"] = original_uri_base_ids
-
     return {
         "$schema": SARIF_SCHEMA,
         "version": "2.1.0",
-        "runs": [run],
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "driftcheck",
+                        "version": version,
+                        "informationUri": "https://github.com/yunaremaia/driftcheck",
+                        "rules": rules,
+                    }
+                },
+                "results": results,
+            }
+        ],
     }

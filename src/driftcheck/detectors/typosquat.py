@@ -112,12 +112,12 @@ def _levenshtein(s1: str, s2: str) -> int:
 
 def _find_suspicious_names(name: str, known: set[str]) -> list[str]:
     """Return known packages within edit distance 2 of `name`.
-
+    
     Uses proportional thresholds to avoid false positives on short names:
     - dist=1: only for names with length >= 4
     - dist=2: only for names with length >= 6 (avoids flagging short-name collisions)
     """
-    hits: list[str] = []
+    hits = []
     name_lower = name.lower()
     name_len = len(name_lower)
     if name_len < 4:
@@ -151,14 +151,14 @@ def _parse_lockfile(manifest: str, text: str) -> list[str]:
             data = json.loads(text)
         except Exception:
             return []
-        deps: set[str] = set()
+        deps = set()
         for section in ("dependencies", "devDependencies", "peerDependencies"):
             block = data.get(section, {})
             if isinstance(block, dict):
                 deps.update(block.keys())
         return list(deps)
     elif manifest == "Cargo.toml":
-        cargo_pkgs: list[str] = []
+        pkgs = []
         in_deps = False
         for line in text.splitlines():
             stripped = line.strip()
@@ -171,8 +171,8 @@ def _parse_lockfile(manifest: str, text: str) -> list[str]:
             if in_deps:
                 m = CARGO_DEP_RE.match(stripped)
                 if m:
-                    cargo_pkgs.append(m.group("pkg").lower())
-        return cargo_pkgs
+                    pkgs.append(m.group("pkg").lower())
+        return pkgs
     return []
 
 

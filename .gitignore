@@ -4,6 +4,3 @@ src/driftcheck.egg-info/
 dist/
 .pytest_cache/
 site/
-
-# driftcheck fix backups
-.driftcheck-backups/

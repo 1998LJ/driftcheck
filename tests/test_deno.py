@@ -67,6 +67,8 @@ class TestFindDenoDrift:
         assert find_deno_drift("", {"README.md": "Deno 2.0"}) == []
 
     def test_drift_in_scan(self):
+        import tempfile
+        from pathlib import Path
         from driftcheck.detector import scan_repo
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -77,6 +79,8 @@ class TestFindDenoDrift:
             assert len(result["deno_drifts"]) == 1
 
     def test_no_drift_in_scan(self):
+        import tempfile
+        from pathlib import Path
         from driftcheck.detector import scan_repo
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

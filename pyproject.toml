@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "driftcheck"
-version = "0.1.47"
+version = "0.1.46"
 description = "Detect version drift between docs and toolchain files (README vs Dockerfile, build.gradle, rust-toolchain.toml, package.json, etc.)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -20,9 +20,7 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
     "Topic :: Software Development :: Testing",
 ]
-dependencies = [
-    'tomli>=2.0; python_version < "3.11"',
-]
+dependencies = []
 
 [project.scripts]
 driftcheck = "driftcheck.cli:main"
@@ -33,24 +31,3 @@ Homepage = "https://github.com/yunaremaia/driftcheck"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["driftcheck*"]
-
-[tool.ruff]
-line-length = 100
-target-version = "py310"
-
-[tool.ruff.lint]
-select = ["E", "W", "F"]
-ignore = ["E501", "E731", "F401", "E402", "E701", "E722", "F821", "F822"]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "F401", "F841"]
-"src/driftcheck/__init__.py" = ["F401"]
-"src/driftcheck/detectors/__init__.py" = ["F401"]
-
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = false
-warn_unused_configs = true
-disallow_untyped_defs = false
-check_untyped_defs = true
-ignore_missing_imports = true

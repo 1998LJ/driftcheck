@@ -11,27 +11,21 @@ Performance:
     File I/O is parallelized via ThreadPoolExecutor for large repos.
 """
 from __future__ import annotations
-
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-import warnings
-
-from .config import DRIFT_KEYS, get_excluded_detectors, get_custom_detectors, load_config, get_ignore_patterns, _matches_ignore_patterns, get_read_timeouts
+from typing import Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from .config import load_config, get_excluded_detectors
 from .plugins import load_plugins, run_plugin_detectors
-from .detectors.rust_workspace import find_rust_workspace_drift
 
 
 def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], list[str]]:
     """Walk directory tree, respecting symlink policy.
-
-    Symlinks pointing outside the repo root are NEVER followed, regardless
-    of follow_symlinks setting. This prevents path traversal attacks.
-
+    
     Args:
         root: repo root path
-        follow_symlinks: if False, skip all symlinks
-
+        follow_symlinks: if False, skip symlinks pointing outside root
+    
     Returns:
         Tuple of (file_paths, skipped_symlinks) where skipped_symlinks are
         human-readable strings describing skipped links for SARIF output.
@@ -39,28 +33,19 @@ def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], li
     files: set[Path] = set()
     skipped: list[str] = []
     root_resolved = root.resolve()
-
-    for dirpath, _dirnames, filenames in os.walk(root, followlinks=False):
+    
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
         dirpath_path = Path(dirpath)
         for fname in filenames:
             fpath = dirpath_path / fname
             if fpath.is_symlink():
                 try:
                     target = fpath.resolve()
-                    # Never follow symlinks outside repo root
-                    # Use path boundary check (not startswith) to prevent prefix traversal
-                    root_resolved_str = str(root_resolved) + os.sep
-                    target_str = str(target)
-                    if not (target_str == str(root_resolved) or target_str.startswith(root_resolved_str)):
-                        skipped.append(
-                            f"Symlink '{fpath.relative_to(root)}' skipped (outside repo root)"
-                        )
-                        continue
-                    if follow_symlinks:
+                    if follow_symlinks or str(target).startswith(str(root_resolved)):
                         files.add(fpath)
                     else:
                         skipped.append(
-                            f"Symlink '{fpath.relative_to(root)}' skipped (follow_symlinks=False)"
+                            f"Symlink '{fpath.relative_to(root)}' skipped (outside repo root)"
                         )
                 except (OSError, RuntimeError):
                     skipped.append(
@@ -73,38 +58,22 @@ def _walk_files(root: Path, follow_symlinks: bool = True) -> tuple[set[Path], li
 
 def _safe_glob(root: Path, pattern: str, walked_files: set[Path], follow_symlinks: bool = True):
     """Wrap Path.glob to respect symlink policy.
-
+    
     When follow_symlinks is False, only yield files that appear in walked_files
-    (i.e., files found by os.walk which skips external symlinks). Paths that are
-    symlinks pointing outside root are excluded.
+    (i.e., files found by os.walk which skips external symlinks).
     """
-    root_resolved = root.resolve()
     for p in root.glob(pattern):
-        if follow_symlinks:
-            yield p
-            continue
-        # follow_symlinks is False: check symlink safety
-        if p.is_symlink():
-            try:
-                target = p.resolve()
-                root_resolved_str = str(root_resolved) + os.sep
-                target_str = str(target)
-                if target_str == str(root_resolved) or target_str.startswith(root_resolved_str):
-                    yield p
-                continue
-            except (OSError, RuntimeError):
-                continue
-        if p in walked_files:
+        if follow_symlinks or p in walked_files:
             yield p
 
 
 def _read_text_safe(path: Path, max_size: int = 1_000_000) -> str | None:
     """Read text file safely, returning None if too large, binary, or unreadable.
-
+    
     Args:
         path: file path to read
         max_size: maximum file size in bytes (default 1MB)
-
+    
     Returns:
         File contents as string, or None if file doesn't exist, is too large,
         binary content, or unreadable.
@@ -126,143 +95,144 @@ def _read_text_safe(path: Path, max_size: int = 1_000_000) -> str | None:
 
 
 from .detectors import (
-    apply_fixes,
-    find_actions_node_drift,
-    find_bazel_drift,
-    find_bun_drift,
-    find_ci_os_drift,
-    find_circleci_drift,
-    find_cmake_drift,
-    find_compose_override_drift,
-    find_conda_drift,
-    find_count_drift,
-    find_dart_drift,
-    find_deno_drift,
-    find_dependabot_drift,
-    find_devcontainer_drift,
-    find_docker_compose_drift,
-    find_docker_drift,
-    find_dockerfile_bases_drift,
-    find_dockerfile_instruction_drift,
-    find_dockerfile_multistage_drift,
-    find_dotnet_drift,
-    find_editorconfig_drift,
-    find_elixir_drift,
-    find_engines_drift,
-    find_env_drift,
-    find_env_drift_combined,
-    find_external_resource_drift,
-    find_gh_actions_version_drift,
-    find_git_tag_drift,
-    find_gitlab_drift,
-    find_go_drift,
-    find_gradle_catalog_drift,
-    find_helm_drift,
-    find_helm_values_drift,
-    find_java_drift,
-    find_jenkins_drift,
-    find_k8s_drift,
-    find_kotlin_drift,
-    find_kotlin_multiplatform_drift,
-    find_lineending_drift,
-    find_lockfile_drift,
-    find_makefile_drift,
-    find_maven_drift,
-    find_mise_drift,
-    find_nix_drift,
-    find_node_drift,
-    find_npmrc_drift,
-    find_nvmrc_drift,
-    find_package_manager_drift,
-    find_php_drift,
-    find_pipfile_drift,
-    find_pnpm_workspace_drift,
-    find_poetry_drift,
-    find_pre_commit_drift,
-    find_python_drift,
-    find_python_version_file_drift,
-    find_renovate_drift,
-    find_requirements_drift,
-    find_ruby_drift,
+    parse_toolchain_version,
     find_rust_drift,
     find_rust_drift_multi,
-    find_swift_drift,
-    find_taskfile_drift,
-    find_terraform_drift,
-    find_tool_versions_drift,
-    find_typosquat_drift,
-    find_version_file_drift,
-    find_vscode_extensions_drift,
-    find_yarnrc_drift,
-    parse_bun_version_from_package,
     parse_cargo_rust_version,
-    parse_composer_php_version,
-    parse_dart_sdk_version,
-    parse_deno_version,
-    parse_dotnet_tfm,
-    parse_gemfile_ruby_version,
-    parse_go_version_from_gomod,
-    parse_gradle_java_version,
-    parse_maven_java_version,
     parse_node_version_from_package,
+    find_node_drift,
     parse_python_version_from_pyproject,
+    find_python_drift,
+    parse_go_version_from_gomod,
+    find_go_drift,
+    find_docker_drift,
+    find_dockerfile_instruction_drift,
+    find_dockerfile_bases_drift,
+    parse_from_stages,
+    find_dockerfile_multistage_drift,
+    parse_gradle_java_version,
+    find_java_drift,
+    parse_maven_java_version,
+    find_maven_drift,
+    find_terraform_drift,
+    find_circleci_drift,
+    find_gitlab_drift,
+    find_actions_node_drift,
+    find_gh_actions_version_drift,
+    find_k8s_drift,
+    find_helm_drift,
+    find_docker_compose_drift,
+    parse_dotnet_tfm,
+    find_dotnet_drift,
+    parse_gemfile_ruby_version,
+    find_ruby_drift,
+    parse_composer_php_version,
+    find_php_drift,
+    parse_bun_version_from_package,
+    find_bun_drift,
+    find_lineending_drift,
+    find_external_resource_drift,
+    find_count_drift,
+    find_dependabot_drift,
+    find_typosquat_drift,
+    find_ci_os_drift,
+    find_lockfile_drift,
+    find_engines_drift,
+    find_tool_versions_drift,
+    find_nvmrc_drift,
+    parse_deno_version,
+    find_deno_drift,
     parse_swift_version_from_package,
-    parse_toolchain_version,
+    find_swift_drift,
+    parse_dart_sdk_version,
+    find_dart_drift,
+    parse_makefile_versions,
+    find_makefile_drift,
+    parse_mix_elixir_version,
+    find_elixir_drift,
+    parse_cmake_version,
+    find_cmake_drift,
+    find_env_drift,
+    find_compose_override_drift,
+    find_helm_values_drift,
+    find_env_drift_combined,
+    find_requirements_drift,
+    parse_poetry_pyproject,
+    find_poetry_drift,
+    parse_kotlin_version,
+    find_kotlin_drift,
+    find_pipfile_drift,
+    find_conda_drift,
+    find_gradle_catalog_drift,
+    find_kotlin_multiplatform_drift,
+    parse_jenkins_node_agent,
+    parse_jenkins_nodejs_version,
+    parse_jenkins_python_version,
+    parse_jenkins_docker_images,
+    find_jenkins_drift,
+    parse_ruby_version,
+    parse_python_version,
+    parse_node_version,
+    parse_java_version,
+    parse_terraform_version,
+    find_version_file_drift,
+    parse_python_version_file,
+    find_python_version_file_drift,
+    apply_fixes,
+    parse_npmrc,
+    find_npmrc_drift,
+    parse_yarnrc_version,
+    find_yarnrc_drift,
+    parse_pnpm_workspace,
+    find_pnpm_workspace_drift,
+    parse_package_manager_field,
+    detect_lockfile_manager,
+    find_package_manager_drift,
+    parse_vscode_extensions,
+    find_vscode_extensions_drift,
+    get_latest_git_tag,
+    find_git_tag_drift,
+    parse_editorconfig,
+    find_editorconfig_drift,
+    find_devcontainer_drift,
+    find_taskfile_drift,
+    find_mise_drift,
+    parse_mise_tools,
+    parse_pre_commit_revs,
+    find_pre_commit_drift,
+    find_renovate_drift,
+    find_bazel_drift,
+    find_nix_drift,
 )
 
 
-def _read_files_parallel(
-    root: Path,
-    patterns: list[str],
-    read_timeout: float = 5.0,
-    read_pool_timeout: float = 30.0,
-) -> str:
+def _read_files_parallel(root: Path, patterns: list[str]) -> str:
     """Read multiple files in parallel using ThreadPoolExecutor.
-
+    
     Returns concatenated file contents separated by newlines.
-    Files that fail to read are logged to stderr via warnings.
-
-    Args:
-        root: Repository root directory.
-        patterns: Glob patterns (relative to *root*) to collect files.
-        read_timeout: Per-file ``future.result()`` timeout in seconds.
-            Defaults to 5 s; override via ``read_timeout`` in
-            ``.driftcheck.toml``.
-        read_pool_timeout: Pool-wide ``as_completed()`` timeout in seconds.
-            Defaults to 30 s; override via ``read_pool_timeout`` in
-            ``.driftcheck.toml``.
     """
     files = []
     for pattern in patterns:
         for p in root.glob(pattern):
             if p.is_file():
                 files.append(p)
-
+    
     if not files:
         return ""
-
+    
     contents = []
-    failed = []
     with ThreadPoolExecutor(max_workers=min(8, len(files))) as executor:
         futures = {
-            executor.submit(_read_text_safe, p, max_size=1_000_000): p
+            executor.submit(lambda p=p: _read_text_safe(p, max_size=1_000_000)): p
             for p in files
         }
-        for future in as_completed(futures, timeout=read_pool_timeout):
-            path = futures[future]
+        for future in as_completed(futures):
             try:
-                result = future.result(timeout=read_timeout)
+                result = future.result()
                 if result is not None:
                     contents.append(result)
-            except TimeoutError:
-                failed.append(f"{path}: read timed out (>{read_timeout}s)")
-            except Exception as e:
-                failed.append(f"{path}: {e}")
-    if failed:
-        warnings.warn(
-            f"_read_files_parallel: {len(failed)} file(s) failed to read: {'; '.join(failed[:5])}{'...' if len(failed) > 5 else ''}",
-            stacklevel=2,
-        )
+            except Exception:
+                pass
     return "\n".join(contents)
 
 
@@ -271,7 +241,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
 
     Configuration is loaded from .driftcheck.toml if present.
     File I/O is parallelized via ThreadPoolExecutor for large repos.
-
+    
     Args:
         root: repo root path
         enabled_detectors: if set, only run these detector keys (skip others)
@@ -282,15 +252,9 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     follow_symlinks = config.get("follow_symlinks", True)
     default_max_size = 1_000_000  # 1MB fallback
     max_file_size = max_file_size or config.get("max_file_size", default_max_size)
-    read_timeout, read_pool_timeout = get_read_timeouts(config)
 
     # Walk files with symlink policy (issue #128)
     walked_files, skipped_symlinks = _walk_files(root, follow_symlinks=follow_symlinks)
-
-    # Apply ignore_patterns to filter files before detector runs
-    ignore_patterns = get_ignore_patterns(config)
-    if ignore_patterns:
-        walked_files = {p for p in walked_files if not _matches_ignore_patterns(str(p.relative_to(root)), ignore_patterns)}
 
     # Filter detectors if git-mode is active
     if enabled_detectors is not None:
@@ -322,7 +286,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     gomod_text = _read_text_safe(gomod_path, max_size=max_file_size) or ""
     cargo_path = root / "Cargo.toml"
     cargo_text = _read_text_safe(cargo_path, max_size=max_file_size) or ""
-
+    
     # Dockerfiles (respect follow_symlinks policy)
     dockerfiles = {}
     for pattern in ["Dockerfile", "Dockerfile.*", "docker/Dockerfile", "docker/Dockerfile.*"]:
@@ -331,7 +295,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     dockerfiles[str(p.relative_to(root))] = content
-
+    
     # Gradle build files
     gradle_files = {}
     for pattern in ["build.gradle", "build.gradle.kts", "gradle/build.gradle", "gradle/build.gradle.kts"]:
@@ -340,7 +304,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     gradle_files[str(p.relative_to(root))] = content
-
+    
     # Maven pom.xml files
     maven_files = {}
     for pattern in ["pom.xml", "maven/pom.xml"]:
@@ -349,7 +313,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     maven_files[str(p.relative_to(root))] = content
-
+    
     # Terraform files
     terraform_files = {}
     for pattern in ["versions.tf", "*.tf", "terraform/*.tf"]:
@@ -358,7 +322,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     terraform_files[str(p.relative_to(root))] = content
-
+    
     # CircleCI config files
     circleci_files = {}
     for pattern in [".circleci/config.yml", ".circleci/config.yaml"]:
@@ -367,7 +331,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     circleci_files[str(p.relative_to(root))] = content
-
+    
     # GitLab CI config files
     gitlab_files = {}
     for pattern in [".gitlab-ci.yml", ".gitlab-ci.yaml"]:
@@ -376,7 +340,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                 content = _read_text_safe(p, max_size=max_file_size)
                 if content is not None:
                     gitlab_files[str(p.relative_to(root))] = content
-
+    
     # Kubernetes manifests
     k8s_files = {}
     for pattern in ["k8s/**/*.yaml", "k8s/**/*.yml", "kubernetes/**/*.yaml", "kubernetes/**/*.yml", "deploy/**/*.yaml", "deploy/**/*.yml"]:
@@ -449,7 +413,6 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     pubspec_text = "\n".join(pubspec_files.values()) if pubspec_files else ""
 
     rust_drifts_multi = find_rust_drift_multi(toolchain_text, cargo_text, docs)
-    rust_workspace_drifts = find_rust_workspace_drift(root)
     node_drifts = find_node_drift(package_text, docs)
     bun_drifts = find_bun_drift(package_text, docs)
     python_drifts = find_python_drift(pyproject_text, docs)
@@ -656,8 +619,8 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
         "package_node": parse_node_version_from_package(package_text),
         "pyproject_python": parse_python_version_from_pyproject(pyproject_text),
         "gomod_version": parse_go_version_from_gomod(gomod_text),
+        "drifts": rust_drifts_multi,
         "rust_drifts": rust_drifts_multi,
-        "rust_workspace_drifts": rust_workspace_drifts,
         "node_drifts": node_drifts,
         "bun_drifts": bun_drifts,
         "python_drifts": python_drifts,
@@ -729,9 +692,8 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
         "renovate_drifts": find_renovate_drift(root),
     }
 
-    # Run plugin detectors (including custom_detectors from config, issue #209)
-    custom_detector_paths = get_custom_detectors(config)
-    plugins = load_plugins(root, extra_paths=custom_detector_paths)
+    # Run plugin detectors
+    plugins = load_plugins(root)
     plugin_results = run_plugin_detectors(root, docs, plugins)
     result.update(plugin_results)
 
@@ -819,6 +781,7 @@ __all__ = [
     "parse_tool_versions",
     "find_tool_versions_drift",
     # NVMRC
+    "parse_nvmrc_version",
     "find_nvmrc_drift",
     # Deno
     "parse_deno_version",
