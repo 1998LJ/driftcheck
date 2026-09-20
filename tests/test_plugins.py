@@ -98,19 +98,18 @@ class TestPluginEndToEnd:
         # Create a plugin file directly with proper escaping
         plugins_dir = tmp_path / ".driftcheck_plugins"
         plugins_dir.mkdir(exist_ok=True)
+        # Use a simple string-based detector to avoid ruff escape-sequence warnings
         plugin_code = (
-            "import re\n\n"
             "def register():\n"
             "    return {'custom': find_custom_drift}\n\n"
-            "CUSTOM_RE = re.compile(r'custom\\s+(?P<ver>\\d+\\.\\d+)')\n\n"
             "def find_custom_drift(root, docs):\n"
             "    drifts = []\n"
             "    for fname, content in docs.items():\n"
-            "        for m in CUSTOM_RE.finditer(content):\n"
+            "        if '1.0' in content:\n"
             "            drifts.append({\n"
             "                'file': fname,\n"
-            "                'doc_version': m.group('ver'),\n"
-            "                'detail': f'custom {m.group(\"ver\")} mentioned',\n"
+            "                'doc_version': '1.0',\n"
+            "                'detail': 'custom 1.0 mentioned'\n"
             "            })\n"
             "    return drifts\n"
         )
@@ -121,3 +120,58 @@ class TestPluginEndToEnd:
         assert "plugin_custom_drifts" in result
         assert len(result["plugin_custom_drifts"]) == 1
         assert result["plugin_custom_drifts"][0]["doc_version"] == "1.0"
+
+
+class TestCustomDetectorsConfig:
+    """Tests for custom_detectors config option (issue #209)."""
+
+    def test_custom_detectors_paths_loaded(self, tmp_path):
+        """Plugins listed in custom_detectors config paths are loaded."""
+        # Create a custom detector file outside .driftcheck_plugins
+        detector_file = tmp_path / "my_detector.py"
+        detector_file.write_text(
+            "import re\n\n"
+            "def register():\n"
+            "    return {'mydet': find_mydet_drift}\n\n"
+            "def find_mydet_drift(root, docs):\n"
+            "    return [{'file': 'README.md', 'detail': 'found by mydet'}]\n"
+        )
+        (tmp_path / "README.md").write_text("test")
+        (tmp_path / ".driftcheck.toml").write_text(
+            '[driftcheck]\ncustom_detectors = ["my_detector.py"]\n'
+        )
+        from driftcheck.detector import scan_repo
+        result = scan_repo(tmp_path)
+        assert "plugin_mydet_drifts" in result
+        assert result["plugin_mydet_drifts"][0]["detail"] == "found by mydet"
+
+    def test_custom_detectors_absolute_path(self, tmp_path):
+        """Absolute paths in custom_detectors work."""
+        import json
+        # Create detector in a separate directory
+        ext_dir = tmp_path / "external"
+        ext_dir.mkdir()
+        detector_file = ext_dir / "ext_detector.py"
+        detector_file.write_text(
+            "def register():\n"
+            "    return {'ext': find_ext_drift}\n\n"
+            "def find_ext_drift(root, docs):\n"
+            "    return [{'file': 'test', 'detail': 'external'}]\n"
+        )
+        (tmp_path / "README.md").write_text("test")
+        # Use json.dumps to properly escape the path for TOML (Windows backslash issue)
+        path_str = json.dumps(str(detector_file))
+        (tmp_path / ".driftcheck.toml").write_text(
+            f'[driftcheck]\ncustom_detectors = [{path_str}]\n'
+        )
+        from driftcheck.detector import scan_repo
+        result = scan_repo(tmp_path)
+        assert "plugin_ext_drifts" in result
+
+    def test_custom_detectors_empty_default(self, tmp_path):
+        """When custom_detectors is not set, no extra plugins loaded."""
+        (tmp_path / "README.md").write_text("test")
+        from driftcheck.detector import scan_repo
+        result = scan_repo(tmp_path)
+        # No plugin results should appear
+        assert not any(k.startswith("plugin_") for k in result)
