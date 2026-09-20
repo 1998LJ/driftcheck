@@ -9,7 +9,7 @@ from typing import Any
 
 # All drift type keys — shared across CLI modes
 DRIFT_KEYS = [
-    "drifts", "rust_drifts", "node_drifts", "bun_drifts", "python_drifts", "go_drifts",
+    "rust_drifts", "node_drifts", "bun_drifts", "python_drifts", "go_drifts",
     "count_drifts", "actions_drifts", "lineending_drifts", "docker_drifts", "docker_multistage_drifts", "docker_bases_drifts",
     "java_drifts", "maven_drifts", "terraform_drifts", "circleci_drifts",
     "gitlab_drifts", "gh_actions_version_drifts", "k8s_drifts", "helm_drifts",
@@ -118,7 +118,6 @@ def get_excluded_detectors(config: dict[str, Any]) -> set[str]:
         if not key.endswith("_drifts"):
             # Map special short names to actual drift keys
             if key == "rust":
-                excluded.add("drifts")
                 excluded.add("rust_drifts")
             else:
                 excluded.add(f"{key}_drifts")
