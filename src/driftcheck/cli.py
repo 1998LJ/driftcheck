@@ -283,11 +283,31 @@ def main(argv=None) -> int:
     ap.add_argument("--git-mode", action="store_true", help="only scan files changed since --git-base (default: HEAD~1)")
     ap.add_argument("--git-base", metavar="COMMIT", default="HEAD~1", help="base commit for --git-mode (default: HEAD~1); validated against strict ref format")
     ap.add_argument("--max-file-size", type=int, default=None, metavar="BYTES", help="max file size in bytes (default: 1MB from config); larger files are skipped")
+    ap.add_argument("--doctor", action="store_true", help="run repository diagnostics (pre-scan checks)")
+    ap.add_argument("--doctor-json", action="store_true", help="output doctor results as JSON")
+    ap.add_argument("--doctor-fix", action="store_true", help="auto-fix doctor-detected issues")
     args = ap.parse_args(argv)
 
     if args.list_detectors:
         _list_detectors()
         return 0
+
+    if getattr(args, "doctor", False):
+        from .doctor import run_doctor, print_doctor_report, doctor_exit_code, doctor_fix
+        root = Path(args.path)
+        report = run_doctor(root)
+        if args.doctor_json:
+            print_doctor_report(report, json_mode=True)
+        else:
+            print_doctor_report(report)
+        if getattr(args, "doctor_fix", False):
+            fixes = doctor_fix(root, report)
+            if fixes:
+                print()
+                print("Auto-fixed:")
+                for f in fixes:
+                    print(f"  ✓ {f}")
+        return doctor_exit_code(report)
 
     if args.init:
         return _init_config(Path(args.path), force=args.force, dry_run=args.dry_run)
