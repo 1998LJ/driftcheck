@@ -57,7 +57,8 @@ def test_sarif_repo_root_is_confined_to_uri_base_id():
 
     run = doc["runs"][0]
     base = run["originalUriBaseIds"]["repoRoot"]
-    assert base["uri"] == "file:///home/testuser/myproject/"
+    expected_root_uri = root.absolute().as_uri().rstrip("/") + "/"
+    assert base["uri"] == expected_root_uri
 
     artifact = run["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]
     assert artifact == {"uri": "README.md", "uriBaseId": "repoRoot"}
