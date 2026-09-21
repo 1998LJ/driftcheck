@@ -27,6 +27,11 @@ DRIFT_RULES = {
         "Bun Version Drift",
         "README documentation references a Bun version that doesn't match package.json engines.bun",
     ),
+    "package_version_drifts": (
+        "package-json-version-drift",
+        "package.json Version Drift",
+        "Documentation references a package version that doesn't match package.json version",
+    ),
     "python_drifts": (
         "python-version-drift",
         "Python Version Drift",
@@ -402,6 +407,8 @@ def _drift_message(drift_type: str, d: dict) -> str:
         return f"Node.js {d.get('doc_version')} in docs should be {d.get('package_version')}"
     elif drift_type == "bun_drifts":
         return f"Bun {d.get('doc_version')} in docs should be {d.get('package_version')}"
+    elif drift_type == "package_version_drifts":
+        return f"{d.get('package')} {d.get('doc_version')} in docs should be {d.get('package_version')}"
     elif drift_type == "python_drifts":
         return f"Python {d.get('doc_version')} in docs should be {d.get('pyproject_version')}"
     elif drift_type == "go_drifts":
@@ -583,7 +590,7 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
 
     # All possible drift keys in the result
     drift_keys = [
-        "rust_drifts", "node_drifts", "bun_drifts", "python_drifts",
+        "rust_drifts", "node_drifts", "bun_drifts", "package_version_drifts", "python_drifts",
         "go_drifts", "count_drifts", "actions_drifts", "lineending_drifts",
         "docker_drifts", "docker_multistage_drifts", "docker_bases_drifts", "java_drifts", "maven_drifts", "terraform_drifts",
         "circleci_drifts", "gitlab_drifts", "gh_actions_version_drifts",

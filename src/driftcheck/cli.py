@@ -16,6 +16,7 @@ DETECTOR_INFO = {
     "rust_drifts": ("rust-cargo", "Rust Cargo.toml rust-version vs README"),
     "node_drifts": ("node", "Node.js package.json engines vs README"),
     "bun_drifts": ("bun", "Bun package.json engines.bun vs README"),
+    "package_version_drifts": ("package-version", "package.json version vs documentation"),
     "python_drifts": ("python", "Python pyproject.toml requires-python vs README"),
     "go_drifts": ("go", "Go go.mod directive vs README"),
     "docker_drifts": ("docker", "Dockerfile FROM tag vs README"),
@@ -85,7 +86,7 @@ DETECTOR_INFO = {
 # Mapping of project files to their relevant detectors for `driftcheck init`
 FILE_DETECTOR_MAP = {
     "Cargo.toml": ["rust_drifts"],
-    "package.json": ["node_drifts", "bun_drifts", "nvmrc_drifts"],
+    "package.json": ["node_drifts", "bun_drifts", "nvmrc_drifts", "package_version_drifts"],
     "go.mod": ["go_drifts"],
     "pyproject.toml": ["python_drifts"],
     "requirements.txt": ["requirements_drifts"],
@@ -639,6 +640,8 @@ def _print_blocking_drifts(all_drifts: dict, result: dict) -> None:
         print(f"driftcheck: {d['file']}: Node {d['doc_version']} → should be {d['package_version']}")
     for d in all_drifts.get("bun_drifts", []):
         print(f"driftcheck: {d['file']}: Bun {d['doc_version']} → should be {d['package_version']} (package.json)")
+    for d in all_drifts.get("package_version_drifts", []):
+        print(f"driftcheck: {d['file']}: {d['package']} {d['doc_version']} → should be {d['package_version']} (package.json)")
     for d in all_drifts.get("python_drifts", []):
         print(f"driftcheck: {d['file']}: Python {d['doc_version']} → should be {d['pyproject_version']}")
     for d in all_drifts.get("go_drifts", []):
