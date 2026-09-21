@@ -377,14 +377,19 @@ def _make_result(
     line: int = 1,
     level: str = "warning",
     pos: int = 0,
+    uri_base_id: str | None = None,
 ) -> dict:
+    artifact_location = {"uri": file}
+    if uri_base_id is not None:
+        artifact_location["uriBaseId"] = uri_base_id
+
     return {
         "ruleId": rule_id,
         "message": {"text": message},
         "locations": [
             {
                 "physicalLocation": {
-                    "artifactLocation": {"uri": file},
+                    "artifactLocation": artifact_location,
                     "region": {"startLine": line, "startColumn": 1},
                 }
             }
@@ -626,7 +631,14 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
             file = _make_relative_path(d.get("file", ""), root)
             message = _drift_message(drift_type, d)
             results.append(
-                _make_result(rule_id, message, file, level=level, pos=d.get("pos", 0))
+                _make_result(
+                    rule_id,
+                    message,
+                    file,
+                    level=level,
+                    pos=d.get("pos", 0),
+                    uri_base_id="repoRoot" if root is not None else None,
+                )
             )
 
     # Process skipped symlinks as suppressed results (issue #128)
@@ -652,20 +664,28 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
                 "suppressions": [{"kind": "inSource", "justification": "follow_symlinks=false policy"}],
             })
 
+    run = {
+        "tool": {
+            "driver": {
+                "name": "driftcheck",
+                "version": version,
+                "informationUri": "https://github.com/yunaremaia/driftcheck",
+                "rules": rules,
+            }
+        },
+        "results": results,
+    }
+    if root is not None:
+        root_uri = root.absolute().as_uri().rstrip("/") + "/"
+        run["originalUriBaseIds"] = {
+            "repoRoot": {
+                "uri": root_uri,
+                "description": {"text": "Repository root scanned by driftcheck"},
+            }
+        }
+
     return {
         "$schema": SARIF_SCHEMA,
         "version": "2.1.0",
-        "runs": [
-            {
-                "tool": {
-                    "driver": {
-                        "name": "driftcheck",
-                        "version": version,
-                        "informationUri": "https://github.com/yunaremaia/driftcheck",
-                        "rules": rules,
-                    }
-                },
-                "results": results,
-            }
-        ],
+        "runs": [run],
     }
