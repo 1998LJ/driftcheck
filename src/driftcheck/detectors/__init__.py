@@ -130,6 +130,7 @@ from .bun import (
     BUN_DOC_RE,
 )
 from .lockfile import find_lockfile_drift
+from .package_lock import find_package_lock_drift, satisfies_npm_range
 from .engines import find_engines_drift
 from .deno import (
     parse_deno_version,
@@ -423,6 +424,8 @@ __all__ = [
     "BUN_DOC_RE",
     # Lockfile
     "find_lockfile_drift",
+    "find_package_lock_drift",
+    "satisfies_npm_range",
     # Line endings
     "find_lineending_drift",
     "EOL_ATTR_RE",
