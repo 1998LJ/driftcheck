@@ -4,6 +4,14 @@ All notable changes to driftcheck will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **`--explain` command**: explains why a drift was detected with file, line, values, diff, impact, and fix suggestion
+  - `--explain <detector:file>` for single drift
+  - `--explain-all` for all drifts
+  - `--explain-format json|text` for output format
+  - `--explain-fix` to apply suggested fixes
+  - 12 new tests
+
 ## [0.1.46] - 2026-09-18
 
 ### Added
