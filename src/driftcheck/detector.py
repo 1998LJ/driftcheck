@@ -138,6 +138,7 @@ from .detectors import (
     find_typosquat_drift,
     find_ci_os_drift,
     find_lockfile_drift,
+    find_package_lock_drift,
     find_engines_drift,
     find_tool_versions_drift,
     find_nvmrc_drift,
@@ -445,6 +446,12 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     ruby_drifts = find_ruby_drift(gemfile_text, docs)
     php_drifts = find_php_drift(composer_text, docs)
     lockfile_drifts = find_lockfile_drift(root)
+    package_lock_drifts = [
+        drift
+        for drift in find_package_lock_drift(root)
+        if drift.get("kind")
+        in {"lockfile_range_violation", "lockfile_dependency_missing", "lockfile_invalid"}
+    ]
     engines_drifts = find_engines_drift(root)
     tool_versions_drifts = find_tool_versions_drift(tool_versions_text, docs)
     mise_drifts = find_mise_drift(mise_text, docs)
@@ -655,6 +662,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
         "compose_override_drifts": find_compose_override_drift(root),
         "helm_values_drifts": find_helm_values_drift(root),
         "lockfile_drifts": lockfile_drifts,
+        "package_lock_drifts": package_lock_drifts,
         "engines_drifts": engines_drifts,
         "tool_versions_drifts": tool_versions_drifts,
         "mise_drifts": mise_drifts,

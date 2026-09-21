@@ -188,6 +188,7 @@ DETECTOR_FILE_PATTERNS: dict[str, list[str]] = {
     "typosquat_drifts": ["requirements.txt", "pyproject.toml", "Pipfile", "package.json", "Cargo.toml"],
 
     "lockfile_drifts": ["package-lock.json", "yarn.lock", "Cargo.lock", "go.sum", "Gemfile.lock", "composer.lock", "poetry.lock", "uv.lock"],
+    "package_lock_drifts": ["package.json", "package-lock.json"],
     "engines_drifts": ["package.json", ".nvmrc"],
     "tool_versions_drifts": [".tool-versions", "README.md"],
     "nvmrc_drifts": [".nvmrc", "package.json", "README.md"],

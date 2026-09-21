@@ -232,6 +232,7 @@ driftcheck --git-mode --git-base v1.0.0
 - **Gradle Version Catalog**: `libs.versions.toml` vs README
 - **Kotlin Multiplatform (KMP)**: `gradle/libs.versions.toml` KMP catalog vs README badges (kotlin, coroutines, compose, AGP, KSP)
 - **Lockfile**: missing, stale, or orphaned lockfiles (package-lock.json, yarn.lock, Cargo.lock, go.sum, Gemfile.lock, composer.lock, poetry.lock, uv.lock) (informational)
+- **package-lock integrity**: package.json dependency ranges vs package-lock.json v1/v2/v3 resolved versions; flags missing direct dependencies and semver range violations
 - **Nix**: `flake.lock` nixpkgs pins vs README mentions
 - **Engines**: `package.json` `engines` field consistency across package managers
 - **Requirements**: `requirements.txt` unpinned packages vs known latest
@@ -273,6 +274,7 @@ driftcheck --git-mode --git-base v1.0.0
 
 **Security:**
 - **Typosquat**: suspicious package names similar to popular packages
+- **package-lock integrity**: blocking supply-chain check for package-lock resolutions outside declared package.json ranges
 
 **Other:**
 - **Line endings**: missing `* text=auto eol=lf` in `.gitattributes` (informational)

@@ -50,6 +50,7 @@ DETECTOR_INFO = {
     "external_resource_drifts": ("external", "External CDN resources in HTML (informational)"),
     "dependabot_drifts": ("dependabot", "Dependabot coverage gaps (informational)"),
     "lockfile_drifts": ("lockfile", "Lockfile missing/stale/orphaned (informational)"),
+    "package_lock_drifts": ("package-lock", "package.json dependency ranges vs package-lock.json resolutions"),
     "tool_versions_drifts": ("tool-versions", ".tool-versions asdf/mise vs README"),
     "mise_drifts": ("mise", "mise.toml tool versions vs README"),
     "nvmrc_drifts": ("nvmrc", ".nvmrc vs package.json engines (informational)"),
@@ -91,7 +92,7 @@ DETECTOR_INFO = {
 # Mapping of project files to their relevant detectors for `driftcheck init`
 FILE_DETECTOR_MAP = {
     "Cargo.toml": ["rust_drifts"],
-    "package.json": ["node_drifts", "bun_drifts", "nvmrc_drifts"],
+    "package.json": ["node_drifts", "bun_drifts", "nvmrc_drifts", "package_lock_drifts"],
     "go.mod": ["go_drifts"],
     "pyproject.toml": ["python_drifts"],
     "setup.py": ["python_setup_drifts"],
@@ -805,6 +806,10 @@ def _print_blocking_drifts(all_drifts: dict, result: dict) -> None:
 
     # Package manager drifts
     for d in all_drifts.get("package_manager_drifts", []):
+        print(f"driftcheck: {d['file']}: {d['detail']}")
+
+    # package-lock integrity drifts are blocking supply-chain findings
+    for d in all_drifts.get("package_lock_drifts", []):
         print(f"driftcheck: {d['file']}: {d['detail']}")
 
     # VSCode extensions drifts
