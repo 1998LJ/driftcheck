@@ -5,4 +5,6 @@
   types: [text]
   additional_dependencies:
     - "git+https://github.com/yunaremaia/driftcheck.git@v0.1.44"
-  args: ["--no-informational"]
+  args: ["--no-informational", "--changed-only"]
+  pass_filenames: false
+  always_run: true

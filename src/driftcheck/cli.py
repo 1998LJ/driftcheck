@@ -6,7 +6,12 @@ from pathlib import Path
 from .detector import scan_repo, apply_fixes
 from .sarif import to_sarif
 from .config import DRIFT_KEYS
-from .git_mode import get_changed_and_untracked, filter_detectors_by_files, DETECTOR_FILE_PATTERNS
+from .git_mode import (
+    get_changed_and_untracked,
+    get_staged_files,
+    filter_detectors_by_files,
+    DETECTOR_FILE_PATTERNS,
+)
 
 # Drift types that are informational (non-blocking) — reported but don't fail the check
 INFORMATIONAL_DRIFTS = {"external_resource_drifts", "dependabot_drifts", "lockfile_drifts", "nvmrc_drifts", "typosquat_drifts"}
@@ -259,7 +264,22 @@ def _validate_detector_names(names: set[str], source: str) -> list[str]:
     return unknown
 
 
+def _pre_commit_hook_entry() -> str:
+    return """- id: driftcheck
+  name: driftcheck
+  description: Detect version drift in staged repository changes
+  entry: driftcheck --changed-only
+  language: python
+  pass_filenames: false
+  always_run: true"""
+
+
 def main(argv=None) -> int:
+    raw_argv = list(argv) if argv is not None else __import__("sys").argv[1:]
+    if raw_argv and raw_argv[0] == "pre-commit":
+        print(_pre_commit_hook_entry())
+        return 0
+
     ap = argparse.ArgumentParser(
         prog="driftcheck",
         description="Detect version drift between docs and toolchain files.",
@@ -281,12 +301,13 @@ def main(argv=None) -> int:
     ap.add_argument("--force", action="store_true", help="overwrite existing config (with --init)")
     ap.add_argument("--dry-run", action="store_true", help="print config to stdout without writing (with --init)")
     ap.add_argument("--git-mode", action="store_true", help="only scan files changed since --git-base (default: HEAD~1)")
+    ap.add_argument("--changed-only", action="store_true", help="only run detectors relevant to files staged for commit")
     ap.add_argument("--git-base", metavar="COMMIT", default="HEAD~1", help="base commit for --git-mode (default: HEAD~1); validated against strict ref format")
     ap.add_argument("--max-file-size", type=int, default=None, metavar="BYTES", help="max file size in bytes (default: 1MB from config); larger files are skipped")
     ap.add_argument("--doctor", action="store_true", help="run repository diagnostics (pre-scan checks)")
     ap.add_argument("--doctor-json", action="store_true", help="output doctor results as JSON")
     ap.add_argument("--doctor-fix", action="store_true", help="auto-fix doctor-detected issues")
-    args = ap.parse_args(argv)
+    args = ap.parse_args(raw_argv)
 
     if args.list_detectors:
         _list_detectors()
@@ -312,9 +333,18 @@ def main(argv=None) -> int:
     if args.init:
         return _init_config(Path(args.path), force=args.force, dry_run=args.dry_run)
 
-    # Git-mode: determine which detectors to run based on changed files
+    # Git/pre-commit modes: determine which detectors to run based on changed files
     enabled_detectors = None
-    if args.git_mode:
+    if args.changed_only:
+        changed = get_staged_files(Path(args.path))
+        if not changed:
+            if not args.quiet:
+                print("driftcheck: no staged files")
+            return 0
+        enabled_detectors = filter_detectors_by_files(changed, DETECTOR_FILE_PATTERNS)
+        if not args.quiet:
+            print(f"driftcheck: changed-only — {len(changed)} staged file(s), {len(enabled_detectors)} detector(s) relevant")
+    elif args.git_mode:
         changed = get_changed_and_untracked(Path(args.path), args.git_base)
         if not changed:
             if not args.quiet:
