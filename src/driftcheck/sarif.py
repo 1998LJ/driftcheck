@@ -555,17 +555,24 @@ def _drift_message(drift_type: str, d: dict) -> str:
 
 
 def _make_relative_path(file: str, root: Path | None) -> str:
-    """Make a path relative to root for SARIF output privacy.
+    """Make absolute paths root-relative while preserving relative paths.
 
-    Absolute paths can leak usernames and internal directory structure
-    in public CI logs and GitHub Code Scanning uploads.
+    Absolute paths can leak usernames and internal directory structure in
+    public CI logs and GitHub Code Scanning uploads. Paths already relative
+    to the repository must keep their directory components so SARIF links
+    resolve to the correct source file.
     """
     if root is None:
         return file
+
+    path = Path(file)
+    if not path.is_absolute():
+        return path.as_posix()
+
     try:
-        return str(Path(file).relative_to(root))
+        return path.relative_to(root).as_posix()
     except ValueError:
-        return Path(file).name  # fallback to basename
+        return path.name  # fallback avoids leaking paths outside the repo root
 
 
 def to_sarif(result: dict, version: str | None = None, root: Path | None = None) -> dict:
