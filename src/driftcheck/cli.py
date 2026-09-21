@@ -315,6 +315,10 @@ def main(argv=None) -> int:
     ap.add_argument("--doctor", action="store_true", help="run repository diagnostics (pre-scan checks)")
     ap.add_argument("--doctor-json", action="store_true", help="output doctor results as JSON")
     ap.add_argument("--doctor-fix", action="store_true", help="auto-fix doctor-detected issues")
+    ap.add_argument("--baseline", action="store_true", help="create baseline from current state (accept all current drifts as known good)")
+    ap.add_argument("--baseline-update", action="store_true", help="update baseline to current state (preserves first_seen for existing drifts)")
+    ap.add_argument("--baseline-reset", action="store_true", help="remove baseline file")
+    ap.add_argument("--baseline-show", action="store_true", help="display baseline contents")
     args = ap.parse_args(raw_argv)
 
     if args.list_detectors:
@@ -340,6 +344,32 @@ def main(argv=None) -> int:
 
     if args.init:
         return _init_config(Path(args.path), force=args.force, dry_run=args.dry_run)
+
+    # Baseline mode: create/update/reset/show baseline
+    if args.baseline or args.baseline_update or args.baseline_reset or args.baseline_show:
+        from .baseline import create_baseline, update_baseline, reset_baseline, show_baseline, load_baseline, compare_against_baseline
+        root = Path(args.path)
+        if args.baseline:
+            result = scan_repo(root)
+            baseline = create_baseline(root, result)
+            print(f"driftcheck: baseline created — {baseline['total_entries']} drift(s) recorded")
+            print(f"driftcheck: baseline file: {root / '.driftcheck-baseline.json'}")
+            return 0
+        if args.baseline_update:
+            result = scan_repo(root)
+            baseline = update_baseline(root, result)
+            print(f"driftcheck: baseline updated — {baseline['total_entries']} drift(s) recorded")
+            return 0
+        if args.baseline_reset:
+            removed = reset_baseline(root)
+            if removed:
+                print("driftcheck: baseline removed")
+            else:
+                print("driftcheck: no baseline to remove")
+            return 0
+        if args.baseline_show:
+            print(show_baseline(root))
+            return 0
 
     # Explain mode: explain drifts without re-scanning
     if args.explain or args.explain_all:
@@ -434,6 +464,25 @@ def main(argv=None) -> int:
 
     result = scan_repo(Path(args.path), enabled_detectors=enabled_detectors, max_file_size=args.max_file_size)
 
+    # Baseline integration: compare against baseline if one exists
+    from .baseline import load_baseline, compare_against_baseline
+    root = Path(args.path)
+    baseline = load_baseline(root)
+    if baseline:
+        comparison = compare_against_baseline(root, result, baseline)
+        # Add baseline info to result for JSON/SARIF output
+        result["_baseline"] = {
+            "info": comparison["baseline_info"],
+            "new_drift_count": sum(len(v) for v in comparison["new_drifts"].values()),
+            "pre_existing_drift_count": sum(len(v) for v in comparison["pre_existing_drifts"].values()),
+        }
+        # For text output, show pre-existing drifts as informational
+        if not args.quiet and comparison["pre_existing_drifts"] and not args.as_json:
+            total_pre = sum(len(v) for v in comparison["pre_existing_drifts"].values())
+            print(f"driftcheck: {total_pre} pre-existing drift(s) in baseline (not failing)")
+    else:
+        comparison = None
+
     if args.report:
         _print_report(result)
         blocking = {k: result.get(k, []) for k in DRIFT_KEYS if k not in INFORMATIONAL_DRIFTS}
@@ -462,6 +511,10 @@ def main(argv=None) -> int:
         from . import __version__
         root = Path(args.path) if not args.absolute_paths else None
         sarif_doc = to_sarif(result, version=__version__, root=root)
+        # Add baseline info to SARIF if present
+        if baseline and comparison:
+            sarif_doc["runs"][0]["properties"] = sarif_doc["runs"][0].get("properties", {})
+            sarif_doc["runs"][0]["properties"]["baseline"] = result.get("_baseline", {})
         print(json.dumps(sarif_doc, indent=2))
         blocking = {k: result.get(k, []) for k in DRIFT_KEYS if k not in INFORMATIONAL_DRIFTS}
         return 1 if any(blocking.values()) else 0
@@ -486,11 +539,21 @@ def main(argv=None) -> int:
     all_drifts = {k: result.get(k, []) for k in DRIFT_KEYS}
     blocking_drifts = {k: v for k, v in all_drifts.items() if k not in INFORMATIONAL_DRIFTS}
 
-    has_blocking = any(blocking_drifts.values())
+    # When baseline exists, only NEW drifts are blocking (pre-existing are warnings)
+    if baseline and comparison:
+        new_blocking = {k: v for k, v in comparison["new_drifts"].items() if k not in INFORMATIONAL_DRIFTS}
+        has_blocking = any(new_blocking.values())
+    else:
+        has_blocking = any(blocking_drifts.values())
+
     has_any_drift = any(all_drifts.values())
 
     if args.as_json:
         print(json.dumps(result, indent=2))
+        if baseline and comparison:
+            # When baseline exists, only NEW drifts make it fail
+            new_blocking = {k: v for k, v in comparison["new_drifts"].items() if k not in INFORMATIONAL_DRIFTS}
+            return 1 if any(new_blocking.values()) else 0
         return 1 if has_blocking else 0
 
     tv = result.get("toolchain_version")
@@ -549,10 +612,20 @@ def main(argv=None) -> int:
         return 0
 
     # Print blocking drifts
-    _print_blocking_drifts(all_drifts, result)
-    # Also print informational drifts
-    if not args.no_informational:
-        _print_informational(all_drifts)
+    if baseline and comparison:
+        # When baseline exists, show new drifts as blocking, pre-existing as informational
+        _print_blocking_drifts(comparison["new_drifts"], result)
+        if not args.no_informational:
+            _print_informational(all_drifts)
+            # Also show pre-existing drifts
+            if comparison["pre_existing_drifts"]:
+                print()
+                print("Pre-existing drifts (in baseline):")
+                _print_blocking_drifts(comparison["pre_existing_drifts"], result)
+    else:
+        _print_blocking_drifts(all_drifts, result)
+        if not args.no_informational:
+            _print_informational(all_drifts)
     return 1
 
 

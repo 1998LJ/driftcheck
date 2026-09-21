@@ -5,6 +5,18 @@ All notable changes to driftcheck will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **`--baseline` mode for incremental drift detection**: accept current state as "known good" and only report NEW drifts
+  - `driftcheck --baseline` creates `.driftcheck-baseline.json` with current drift snapshot
+  - `driftcheck --baseline-update` updates baseline (preserves `first_seen` timestamps)
+  - `driftcheck --baseline-reset` removes the baseline file
+  - `driftcheck --baseline-show` displays baseline contents
+  - When a baseline exists, only NEW drifts fail the check (pre-existing are warnings)
+  - Baseline file auto-added to `.gitignore`
+  - JSON output includes `_baseline` metadata with new/pre-existing drift counts
+  - SARIF output includes baseline properties
+  - 27 new tests
+
+### Added
 - **`--explain` command**: explains why a drift was detected with file, line, values, diff, impact, and fix suggestion
   - `--explain <detector:file>` for single drift
   - `--explain-all` for all drifts
