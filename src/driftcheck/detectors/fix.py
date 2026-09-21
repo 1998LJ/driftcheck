@@ -53,6 +53,17 @@ def apply_fixes(root: Path, result: dict) -> list[str]:
             if fix_in_file(fpath, d["doc_version"], d["pyproject_version"], [PY_RE]):
                 fixed.append(d["file"])
     
+    # Legacy Python setup.py/setup.cfg drifts. Python floor drifts are safe
+    # to auto-fix using the same documentation pattern as pyproject.toml.
+    for d in result.get("python_setup_drifts", []):
+        if d.get("type") != "python_requires":
+            continue
+        fpath = root / d["file"]
+        if fpath.exists():
+            if fix_in_file(fpath, d["doc_version"], d["setup_version"], [PY_RE]):
+                if d["file"] not in fixed:
+                    fixed.append(d["file"])
+
     # Go drifts
     for d in result.get("go_drifts", []):
         fpath = root / d["file"]

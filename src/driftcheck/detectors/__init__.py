@@ -20,6 +20,11 @@ from .python import (
     find_python_drift,
     PY_RE,
 )
+from .python_setup import (
+    parse_setup_py,
+    parse_setup_cfg,
+    find_python_setup_drift,
+)
 from .go import (
     parse_go_version_from_gomod,
     find_go_drift,
@@ -339,6 +344,9 @@ __all__ = [
     "parse_python_version_from_pyproject",
     "find_python_drift",
     "PY_RE",
+    "parse_setup_py",
+    "parse_setup_cfg",
+    "find_python_setup_drift",
     # Go
     "parse_go_version_from_gomod",
     "find_go_drift",

@@ -32,6 +32,11 @@ DRIFT_RULES = {
         "Python Version Drift",
         "README documentation references a Python version that doesn't match pyproject.toml requires-python",
     ),
+    "python_setup_drifts": (
+        "python-setup-version-drift",
+        "Legacy Python Setup Drift",
+        "Documentation references Python or dependency versions that conflict with setup.py/setup.cfg",
+    ),
     "go_drifts": (
         "go-version-drift",
         "Go Version Drift",
@@ -409,6 +414,10 @@ def _drift_message(drift_type: str, d: dict) -> str:
         return f"Bun {d.get('doc_version')} in docs should be {d.get('package_version')}"
     elif drift_type == "python_drifts":
         return f"Python {d.get('doc_version')} in docs should be {d.get('pyproject_version')}"
+    elif drift_type == "python_setup_drifts":
+        if d.get("type") == "python_requires":
+            return f"Python {d.get('doc_version')} in docs should be {d.get('setup_version')} ({d.get('source')})"
+        return f"{d.get('package')} {d.get('doc_version')} in docs should be {d.get('setup_version')} ({d.get('source')})"
     elif drift_type == "go_drifts":
         return f"Go {d.get('doc_version')} in docs should be {d.get('gomod_version')}"
     elif drift_type == "docker_drifts":
@@ -595,7 +604,7 @@ def to_sarif(result: dict, version: str | None = None, root: Path | None = None)
 
     # All possible drift keys in the result
     drift_keys = [
-        "rust_drifts", "node_drifts", "bun_drifts", "python_drifts",
+        "rust_drifts", "node_drifts", "bun_drifts", "python_drifts", "python_setup_drifts",
         "go_drifts", "count_drifts", "actions_drifts", "lineending_drifts",
         "docker_drifts", "docker_multistage_drifts", "docker_bases_drifts", "java_drifts", "maven_drifts", "terraform_drifts",
         "circleci_drifts", "gitlab_drifts", "gh_actions_version_drifts",

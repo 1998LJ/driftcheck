@@ -17,6 +17,7 @@ DETECTOR_INFO = {
     "node_drifts": ("node", "Node.js package.json engines vs README"),
     "bun_drifts": ("bun", "Bun package.json engines.bun vs README"),
     "python_drifts": ("python", "Python pyproject.toml requires-python vs README"),
+    "python_setup_drifts": ("python-setup", "Python setup.py/setup.cfg requirements vs docs"),
     "go_drifts": ("go", "Go go.mod directive vs README"),
     "docker_drifts": ("docker", "Dockerfile FROM tag vs README"),
     "docker_multistage_drifts": ("docker-multistage", "Multi-stage Dockerfile conflicting tags"),
@@ -88,6 +89,8 @@ FILE_DETECTOR_MAP = {
     "package.json": ["node_drifts", "bun_drifts", "nvmrc_drifts"],
     "go.mod": ["go_drifts"],
     "pyproject.toml": ["python_drifts"],
+    "setup.py": ["python_setup_drifts"],
+    "setup.cfg": ["python_setup_drifts"],
     "requirements.txt": ["requirements_drifts"],
     "Pipfile": ["pipfile_drifts"],
     "Dockerfile": ["docker_drifts", "docker_multistage_drifts", "docker_bases_drifts"],
@@ -641,6 +644,11 @@ def _print_blocking_drifts(all_drifts: dict, result: dict) -> None:
         print(f"driftcheck: {d['file']}: Bun {d['doc_version']} → should be {d['package_version']} (package.json)")
     for d in all_drifts.get("python_drifts", []):
         print(f"driftcheck: {d['file']}: Python {d['doc_version']} → should be {d['pyproject_version']}")
+    for d in all_drifts.get("python_setup_drifts", []):
+        if d.get("type") == "python_requires":
+            print(f"driftcheck: {d['file']}: Python {d['doc_version']} → should be {d['setup_version']} ({d['source']})")
+        else:
+            print(f"driftcheck: {d['file']}: {d['package']} {d['doc_version']} → should be {d['setup_version']} ({d['source']})")
     for d in all_drifts.get("go_drifts", []):
         print(f"driftcheck: {d['file']}: Go {d['doc_version']} → should be {d['gomod_version']}")
     for d in all_drifts.get("count_drifts", []):

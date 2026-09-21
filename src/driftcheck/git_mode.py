@@ -138,6 +138,7 @@ DETECTOR_FILE_PATTERNS: dict[str, list[str]] = {
     "node_drifts": ["package.json", "README.md", "CONTRIBUTING.md"],
     "bun_drifts": ["package.json", "README.md", "CONTRIBUTING.md"],
     "python_drifts": ["pyproject.toml", "README.md", "CONTRIBUTING.md"],
+    "python_setup_drifts": ["setup.py", "setup.cfg", "README.md", "CONTRIBUTING.md"],
     "go_drifts": ["go.mod", "README.md", "CONTRIBUTING.md"],
     "docker_drifts": ["Dockerfile", "Dockerfile.*", "docker/Dockerfile*", "README.md"],
     "java_drifts": ["build.gradle", "build.gradle.kts", "README.md"],
