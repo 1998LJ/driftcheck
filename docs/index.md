@@ -14,9 +14,9 @@ driftcheck --fix     # auto-fix drifts in documentation files
 
 ## Features
 
-- **63 detector modules** covering 50+ toolchains
-- **67 registered detectors** including CI/CD, infrastructure, and config drift
-- **1196 tests** with >95% code coverage
+- **65 detector modules** covering 50+ toolchains
+- **69 registered detectors** including CI/CD, infrastructure, and config drift
+- **1264 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 - **Auto-fix** mode (`--fix`) to patch documentation drifts
 - **Plugin system** for custom detectors

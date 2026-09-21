@@ -207,7 +207,7 @@ driftcheck is designed to run as a quality gate in CI pipelines. It exits with c
 driftcheck --git-mode --git-base v1.0.0
 ```
 
-### Checks (v0.1.45):
+### Checks (v0.1.46):
 
 **Language runtimes:**
 - **Rust**: `rust-toolchain.toml` `channel` **and** `Cargo.toml` `rust-version` vs `README.md` / `docs/README*.md` / `CONTRIBUTING*.md` — minor-aware (patch differences ignored)
@@ -322,7 +322,7 @@ the files staged for the next commit:
 ```yaml
 repos:
   - repo: https://github.com/yunaremaia/driftcheck
-    rev: v0.1.45
+    rev: v0.1.46
     hooks:
       - id: driftcheck
         args: ["--no-informational"]
@@ -350,9 +350,9 @@ pre-commit install
 
 ### Stats
 
-- **63 detector modules** covering 50+ toolchains and file formats
-- **67 registered detectors** (including split environment detectors, lockfile variants, and plugin system)
-- **1196 tests** with >95% code coverage
+- **65 detector modules** covering 50+ toolchains and file formats
+- **69 registered detectors** (including split environment detectors, lockfile variants, and plugin system)
+- **1264 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 - **Plugin system** for custom detectors
 - **Pre-commit hook** support
