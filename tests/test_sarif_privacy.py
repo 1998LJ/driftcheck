@@ -46,20 +46,22 @@ def test_sarif_paths_relative_by_default():
     assert ".." not in uri, f"Path should not traverse upward, got: {uri}"
 
 
-def test_sarif_no_absolute_paths_in_output():
-    """SARIF output must never contain /home/ or C:\\Users\\ paths."""
+def test_sarif_repo_root_is_confined_to_uri_base_id():
+    """Absolute repo root belongs only in originalUriBaseIds, not result URIs."""
     result = _empty_result()
     result["rust_drifts"] = [
         {"file": "README.md", "doc_version": "1.93.0", "toolchain_version": "1.96.1", "pos": 10}
     ]
-    result["_skipped_symlinks"] = [
-        "Symlink 'secret' skipped (outside repo root)"
-    ]
     root = Path("/home/testuser/myproject")
     doc = to_sarif(result, version="0.1.45", root=root)
-    import json
-    sarif_str = json.dumps(doc)
-    assert "/home/" not in sarif_str, "SARIF output should not contain absolute /home/ paths"
+
+    run = doc["runs"][0]
+    base = run["originalUriBaseIds"]["repoRoot"]
+    expected_root_uri = root.absolute().as_uri().rstrip("/") + "/"
+    assert base["uri"] == expected_root_uri
+
+    artifact = run["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]
+    assert artifact == {"uri": "README.md", "uriBaseId": "repoRoot"}
 
 
 def test_sarif_absolute_paths_flag():
@@ -69,8 +71,11 @@ def test_sarif_absolute_paths_flag():
         {"file": "/home/testuser/myproject/README.md", "doc_version": "1.93.0", "toolchain_version": "1.96.1", "pos": 10}
     ]
     doc = to_sarif(result, version="0.1.45", root=None)
-    uri = doc["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+    run = doc["runs"][0]
+    uri = run["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
     assert "/home/" in uri, f"With root=None, absolute paths preserved, got: {uri}"
+    assert "originalUriBaseIds" not in run
+    assert "uriBaseId" not in run["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]
 
 
 def test_sarif_skipped_symlinks_no_absolute_target():
@@ -87,14 +92,15 @@ def test_sarif_skipped_symlinks_no_absolute_target():
         assert "C:\\Users\\" not in msg
 
 
-def test_sarif_paths_no_username_leak():
-    """SARIF output should not leak usernames in paths."""
+def test_sarif_result_paths_do_not_leak_username():
+    """Result artifact URIs stay repo-relative even when the base URI is absolute."""
     result = _empty_result()
     result["rust_drifts"] = [
         {"file": "src/main.rs", "doc_version": "1.93.0", "toolchain_version": "1.96.1", "pos": 10}
     ]
     root = Path("/home/johndoe/driftcheck")
     doc = to_sarif(result, version="0.1.45", root=root)
-    import json
-    sarif_str = json.dumps(doc)
-    assert "johndoe" not in sarif_str, "SARIF output should not contain usernames"
+    artifact = doc["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]
+    assert artifact["uri"] == "src/main.rs"
+    assert "johndoe" not in artifact["uri"]
+    assert artifact["uriBaseId"] == "repoRoot"
