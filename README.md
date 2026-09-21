@@ -45,6 +45,10 @@ Or with SARIF upload for GitHub Code Scanning:
     sarif_file: driftcheck.sarif
 ```
 
+SARIF output includes an `originalUriBaseIds.repoRoot` `file://` URI and
+repo-relative artifact paths tagged with `uriBaseId: "repoRoot"`, so code
+scanning can resolve findings correctly when driftcheck runs from a subdirectory.
+
 ### Reusable Workflow (Zero-Config CI)
 
 For the simplest setup, use driftcheck's reusable workflow — no YAML to write in your repo:
