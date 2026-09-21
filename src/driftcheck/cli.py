@@ -308,6 +308,10 @@ def main(argv=None) -> int:
     ap.add_argument("--changed-only", action="store_true", help="only run detectors relevant to files staged for commit")
     ap.add_argument("--git-base", metavar="COMMIT", default="HEAD~1", help="base commit for --git-mode (default: HEAD~1); validated against strict ref format")
     ap.add_argument("--max-file-size", type=int, default=None, metavar="BYTES", help="max file size in bytes (default: 1MB from config); larger files are skipped")
+    ap.add_argument("--explain", metavar="DRIFT_ID", help="explain a specific drift (format: detector:file)")
+    ap.add_argument("--explain-all", action="store_true", help="explain all detected drifts")
+    ap.add_argument("--explain-format", choices=["text", "json"], default="text", help="output format for --explain (default: text)")
+    ap.add_argument("--explain-fix", action="store_true", help="apply suggested fixes with --explain or --explain-all")
     ap.add_argument("--doctor", action="store_true", help="run repository diagnostics (pre-scan checks)")
     ap.add_argument("--doctor-json", action="store_true", help="output doctor results as JSON")
     ap.add_argument("--doctor-fix", action="store_true", help="auto-fix doctor-detected issues")
@@ -336,6 +340,76 @@ def main(argv=None) -> int:
 
     if args.init:
         return _init_config(Path(args.path), force=args.force, dry_run=args.dry_run)
+
+    # Explain mode: explain drifts without re-scanning
+    if args.explain or args.explain_all:
+        from .explain import Explainer
+        root = Path(args.path)
+        result = scan_repo(root, enabled_detectors=None, max_file_size=args.max_file_size)
+        explainer = Explainer(root)
+
+        if args.explain_all:
+            explanations = explainer.explain_all(result)
+            if args.explain_format == "json":
+                print(json.dumps(explanations, indent=2))
+            else:
+                for exp in explanations:
+                    print(f"Drift: {exp['drift']}")
+                    print(f"  File: {exp['file']}" + (f" (line {exp['line']})" if exp['line'] else ""))
+                    print(f"  Actual: {exp['actual']}")
+                    print(f"  Expected: {exp['expected']}")
+                    print(f"  Diff: {exp['diff']}")
+                    print(f"  Impact: {exp['impact']}")
+                    print(f"  Fix: {exp['fix']}")
+                    print()
+            if args.explain_fix:
+                fixed = []
+                for drift_type, drifts in result.items():
+                    if not isinstance(drifts, list):
+                        continue
+                    for drift in drifts:
+                        if isinstance(drift, dict):
+                            result_fix = explainer.explain_fix(drift, drift_type)
+                            if result_fix:
+                                fixed.append(result_fix)
+                if fixed:
+                    print(f"driftcheck: fixed {len(fixed)} file(s): {', '.join(fixed)}")
+            return 0
+
+        # Single drift explain
+        drift_id = args.explain
+        # Parse drift_id as "detector:file" or just "detector"
+        parts = drift_id.split(":", 1)
+        detector = parts[0]
+        file_filter = parts[1] if len(parts) > 1 else None
+
+        found = False
+        for drift_type, drifts in result.items():
+            if not isinstance(drifts, list):
+                continue
+            if drift_type != detector:
+                continue
+            for drift in drifts:
+                if not isinstance(drift, dict):
+                    continue
+                if file_filter and drift.get("file") != file_filter:
+                    continue
+                if args.explain_format == "json":
+                    print(json.dumps(explainer.explain_json(drift, drift_type), indent=2))
+                else:
+                    print(explainer.explain_text(drift, drift_type))
+                found = True
+                if args.explain_fix:
+                    fixed = explainer.explain_fix(drift, drift_type)
+                    if fixed:
+                        print(f"driftcheck: fixed {fixed}")
+                break
+            if found:
+                break
+        if not found:
+            print(f"driftcheck: drift '{drift_id}' not found", file=__import__('sys').stderr)
+            return 1
+        return 0
 
     # Git/pre-commit modes: determine which detectors to run based on changed files
     enabled_detectors = None
