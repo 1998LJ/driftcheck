@@ -329,9 +329,9 @@ pre-commit install
 
 ### Stats
 
-- **61 detector modules** covering 50+ toolchains and file formats
-- **68 registered detectors** (including split environment detectors, lockfile variants, and plugin system)
-- **1122 tests** with >95% code coverage
+- **63 detector modules** covering 50+ toolchains and file formats
+- **67 registered detectors** (including split environment detectors, lockfile variants, and plugin system)
+- **1196 tests** with >95% code coverage
 - **SARIF 2.1.0** output for GitHub Code Scanning
 - **Plugin system** for custom detectors
 - **Pre-commit hook** support
