@@ -6,6 +6,7 @@ import pytest
 from driftcheck.git_mode import (
     get_changed_files,
     get_changed_and_untracked,
+    get_staged_files,
     filter_detectors_by_files,
     _glob_match,
     DETECTOR_FILE_PATTERNS,
@@ -114,6 +115,30 @@ class TestGetChangedFiles:
         """Rejects path traversal attempt."""
         result = get_changed_files(Path("/tmp"), "../../etc/passwd")
         assert result == set()
+
+
+class TestGetStagedFiles:
+    def test_returns_staged_files(self):
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "package.json\nREADME.md\n"
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            result = get_staged_files(Path("/tmp"))
+        assert result == {"package.json", "README.md"}
+        assert mock_run.call_args[0][0] == [
+            "git",
+            "diff",
+            "--cached",
+            "--name-only",
+            "--diff-filter=ACMR",
+            "--",
+        ]
+
+    def test_returns_empty_set_on_failure(self):
+        mock_result = MagicMock()
+        mock_result.returncode = 128
+        with patch("subprocess.run", return_value=mock_result):
+            assert get_staged_files(Path("/tmp")) == set()
 
 
 class TestGetChangedAndUntracked:

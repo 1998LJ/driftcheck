@@ -51,6 +51,27 @@ def get_changed_files(root: Path, base_commit: str = "HEAD~1") -> set[str]:
         return set()
 
 
+def get_staged_files(root: Path) -> set[str]:
+    """Return files staged for the next commit."""
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR", "--"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            return set()
+        return {
+            line.strip()
+            for line in result.stdout.splitlines()
+            if line.strip()
+        }
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return set()
+
+
 def get_changed_and_untracked(root: Path, base_commit: str = "HEAD~1") -> set[str]:
     """Get changed files plus untracked files (for full PR coverage)."""
     changed = get_changed_files(root, base_commit)

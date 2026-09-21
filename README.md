@@ -314,7 +314,8 @@ Plugin results appear as `plugin_<name>_drifts` in JSON output and are printed i
 
 ### Pre-commit hook
 
-driftcheck ships a pre-commit hook. Add to your `.pre-commit-config.yaml`:
+driftcheck ships a pre-commit hook that limits work to detectors relevant to
+the files staged for the next commit:
 
 ```yaml
 repos:
@@ -325,7 +326,20 @@ repos:
         args: ["--no-informational"]
 ```
 
-Or use it locally:
+The published hook uses `--changed-only`, which reads the staged git diff and
+runs only relevant detectors. You can use the same mode directly:
+
+```bash
+driftcheck --changed-only
+```
+
+To print the hook manifest entry for tooling or inspection:
+
+```bash
+driftcheck pre-commit
+```
+
+Or install pre-commit locally:
 
 ```bash
 pip install pre-commit
