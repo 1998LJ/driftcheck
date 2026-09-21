@@ -103,6 +103,7 @@ from .detectors import (
     find_node_drift,
     parse_python_version_from_pyproject,
     find_python_drift,
+    find_python_setup_drift,
     parse_go_version_from_gomod,
     find_go_drift,
     find_docker_drift,
@@ -282,6 +283,10 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     package_text = _read_text_safe(pkg_path, max_size=max_file_size) or ""
     py_path = root / "pyproject.toml"
     pyproject_text = _read_text_safe(py_path, max_size=max_file_size) or ""
+    setup_cfg_path = root / "setup.cfg"
+    setup_cfg_text = _read_text_safe(setup_cfg_path, max_size=max_file_size)
+    setup_py_path = root / "setup.py"
+    setup_py_text = _read_text_safe(setup_py_path, max_size=max_file_size)
     gomod_path = root / "go.mod"
     gomod_text = _read_text_safe(gomod_path, max_size=max_file_size) or ""
     cargo_path = root / "Cargo.toml"
@@ -416,6 +421,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
     node_drifts = find_node_drift(package_text, docs)
     bun_drifts = find_bun_drift(package_text, docs)
     python_drifts = find_python_drift(pyproject_text, docs)
+    python_setup_drifts = find_python_setup_drift(setup_py_text, setup_cfg_text, docs)
     go_drifts = find_go_drift(gomod_text, docs)
     count_drifts = find_count_drift(root, docs)
     actions_drifts = find_actions_node_drift(root)
@@ -544,10 +550,6 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
                     version_files[str(p.relative_to(root))] = content
 
     # Python version file drift (.python-version vs requires-python floor)
-    setup_cfg_path = root / "setup.cfg"
-    setup_cfg_text = _read_text_safe(setup_cfg_path, max_size=max_file_size)
-    setup_py_path = root / "setup.py"
-    setup_py_text = _read_text_safe(setup_py_path, max_size=max_file_size)
     python_version_file_drifts = find_python_version_file_drift(
         version_files.get(".python-version"),
         pyproject_text or None,
@@ -623,6 +625,7 @@ def scan_repo(root: Path = Path("."), enabled_detectors: set[str] | None = None,
         "node_drifts": node_drifts,
         "bun_drifts": bun_drifts,
         "python_drifts": python_drifts,
+        "python_setup_drifts": python_setup_drifts,
         "go_drifts": go_drifts,
         "count_drifts": count_drifts,
         "actions_drifts": actions_drifts,

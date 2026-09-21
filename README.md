@@ -210,6 +210,7 @@ driftcheck --git-mode --git-base v1.0.0
 - **Node**: `package.json` `engines.node` vs README
 - **Bun**: `package.json` `engines.bun` vs README — major.minor comparison
 - **Python**: `pyproject.toml` `requires-python` vs README
+- **Python (legacy setup)**: `setup.py` / `setup.cfg` `python_requires` and explicit `install_requires` pins vs README/CONTRIBUTING
 - **Go**: `go.mod` `go` directive vs README
 - **PHP**: `composer.json` `require.php` vs README — major.minor comparison
 - **Ruby**: `Gemfile` `ruby "x.y.z"` directive vs README — major.minor comparison
